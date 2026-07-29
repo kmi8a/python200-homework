@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from scipy import stats
 import seaborn as sns
 
+## Pandas Review
 
 # Pandas Question 1
 data = {
@@ -18,7 +19,6 @@ df = pd.DataFrame(data)
 print(f"First Three Rows:\n{df.head(3)}")
 print(f"Shape:\n{df.shape}")
 print(f"Data Types:\n{df.dtypes}")
-
 
 # Pandas Question 2
 
@@ -44,6 +44,8 @@ print(df[['name', 'city']])
 # Pandas Question 7
 top3 = df.sort_values(by='grade', ascending=False).head(3)
 print(top3)
+
+## NumPy Review
 
 # Numpy Question 1
 array = np.array([10, 20, 30, 40, 50])
@@ -94,6 +96,8 @@ data_std = np.std(data)
 print(f'{data_mean:.4f}')
 print(f'{data_std:.4f}')
 
+## Matplotlib Review
+
 # Matplot Question 1
 x = [0, 1, 2, 3, 4, 5]
 y = [0, 1, 4, 9, 16, 25]
@@ -133,7 +137,7 @@ plt.ylabel('y')
 plt.legend()
 plt.show()
 
-# Matplot Question 3
+# Matplot Question 4
 
 fig, (pl1, pl2) = plt.subplots(1, 2, figsize=(10,4))
 
@@ -149,8 +153,11 @@ pl2.set_title("Subject Scores")
 pl2.set_xlabel("Subjects")
 pl2.set_ylabel("Scores")
 
-plt.tight_layout
+plt.tight_layout()
 plt.show()
+
+
+## Descriptive Statistics Review
 
 # Descriptive Stats Question 1
 data_q1 = [12, 15, 14, 10, 18, 22, 13, 16, 14, 15]
@@ -191,7 +198,7 @@ skewed_data = np.random.exponential(10, 200)
 
 plt.figure(figsize=(8, 6))
 plt.boxplot([normal_data, skewed_data], tick_labels=['Normal', 'Exponential'])
-plt.title('Distibution Comparison')
+plt.title('Distribution Comparison')
 plt.ylabel('Value')
 plt.show()
 
@@ -215,6 +222,8 @@ print(f'Data 1:\n   Mean: {mean1}, Median: {median1}, Mode: {mode1}')
 print(f'Data 2:\n   Mean: {mean2}, Median: {median2}, Mode: {mode2}')
 
 ## The mean for data2 is so different because of the value 150, which is an outlier and heavily skews the data towards it.
+
+## Hypothesis Testing Review
 
 # Hypothesis Question 1
 group_a = [72, 68, 75, 70, 69, 73, 71, 74]
@@ -258,6 +267,8 @@ print(f'p-value: {p_value}')
 
 # Hypothesis Question 6
 print("The average score for Group A is lower than the average score for Group B, it's unlikely that this difference occurred due to random chance.")
+
+## Correlation Review
 
 # Correlation Question 1
 x = np.array([1, 2, 3, 4, 5])
@@ -309,6 +320,8 @@ fig, ax = plt.subplots()
 sns.heatmap(correlation_matrix, annot=True, ax=ax)
 plt.title("Correlation Heatmap")
 plt.show()
+
+## Pipelines
 
 # Pipeline Question 1
 arr = np.array([12.0, 15.0, np.nan, 14.0, 10.0, np.nan, 18.0, 14.0, 16.0, 22.0, np.nan, 13.0])

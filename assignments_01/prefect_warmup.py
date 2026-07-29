@@ -17,18 +17,19 @@ def summarize_data(series):
     return {'mean': series.mean(), 'median': series.median(), 'std': series.std(), 'mode': series.mode()[0]}
 
 @flow
-def data_pipeline(arr):
+def pipeline_flow(arr):
     series = create_series(arr)
     cleaned_series = clean_data(series)
     return summarize_data(cleaned_series)
 
 
 if __name__=='__main__':
-    result = data_pipeline(arr)
+    result = pipeline_flow(arr)
     print(result)
 
 ## 1. Why might Prefect be more overhead than it is worth here?
 ## The complexity that prefect is capable of doesn't really add anything valuable to to this data pipeline, not neeeded at this level of complexity. 
+
 ## 2. Describe some realistic scenarios where a framework like Prefect could still be useful, even if the pipeline logic itself stays simple like in this case.
 ## A possible scenario would be when you need to run this pipeline automatically on a set schedule, prefect gives you that functionality withouth writing a custom scheduler.
 ## A second possible scenario would be when you need to track sucess, failure and retry states.
