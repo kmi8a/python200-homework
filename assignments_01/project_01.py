@@ -220,9 +220,14 @@ def generate_summary_report(df, ttest_results, correlation_results):
     # The result of the pre/post-2020 t-test in plain language.
     if pd.notna(p_val):
         if p_val < 0.05:
-            logger.info(f'There was a statistically significant change in happiness scores from 2019 to 2020 (p={p_val:.4f}), consistent with a pandemic-era shift.')
+            logger.info(f'''
+                        There was a statistically significant shift in reported happiness scores between 2019 and 2020 ($p = {p_val:.4f}$). 
+                        This indicates that the change in scores was large enough that it is very unlikely to be due to random chance alone, 
+                        reflecting a measurable impact coinciding with the onset of the pandemic.''')
         else:
-            logger.info(f'No statistically significant change in happiness scores was found between 2019 and 2020 (p={p_val:.4f}).')
+            logger.info(f'''No statistically significant change in happiness scores was found between 2019 and 2020 ($p = {p_val:.4f}$).
+                         This suggests that, despite the global disruptions of that year, 
+                        average reported happiness remained relatively stable compared to pre-2020 levels.''')
     else:
         logger.warning('T-test result unavailable (likely missing data for 2019 or 2020).')
     

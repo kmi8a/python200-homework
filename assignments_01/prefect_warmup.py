@@ -5,8 +5,8 @@ from prefect import task, flow
 arr = np.array([12.0, 15.0, np.nan, 14.0, 10.0, np.nan, 18.0, 14.0, 16.0, 22.0, np.nan, 13.0])
 
 @task
-def create_series(arr):
-    return pd.Series(arr, name='values')
+def create_series(data):
+    return pd.Series(data, name='values')
 
 @task
 def clean_data(series):
@@ -24,7 +24,7 @@ def pipeline_flow(arr):
 
 
 if __name__=='__main__':
-    result = pipeline_flow(arr)
+    result = pipeline_flow()
     print(result)
 
 ## 1. Why might Prefect be more overhead than it is worth here?
