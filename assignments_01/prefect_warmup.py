@@ -25,7 +25,6 @@ def pipeline_flow():
 
 if __name__=='__main__':
     result = pipeline_flow()
-    print(result)
 
 ## 1. Why might Prefect be more overhead than it is worth here?
 ## The complexity that prefect is capable of doesn't really add anything valuable to to this data pipeline, not neeeded at this level of complexity. 
