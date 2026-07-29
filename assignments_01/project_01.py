@@ -72,6 +72,13 @@ def compute_statistics(df):
     std_val = df['happiness_score'].std()
     
     logger.info(f"Overall Happiness Stats: Mean={mean_val:.2f}, Median={median_val:.2f}, Std={std_val:.2f}")
+
+    # breakdown by year
+    if 'year' in df.columns:
+        yearly_mean = df.groupby('year')['happiness_score'].mean()
+        logger.info(f"Yearly Mean Happiness: {yearly_mean.to_dict()}")
+    else:
+        logger.warning("Column 'year' not found in DataFrame.")
     
     # regional breakdown
     if 'region' in df.columns:
@@ -91,11 +98,13 @@ def generate_visuals(df):
     plt.figure()
     sns.histplot(plot_df['happiness_score'])
     plt.savefig(OUTPUT / "happiness_histogram.png")
+    logger.info("Saved happiness_histogram.png")
     
     # boxplot
     plt.figure()
     sns.boxplot(data=plot_df, x='year', y='happiness_score')
     plt.savefig(OUTPUT / "happiness_by_year.png")
+    logger.info("Saved happiness_by_year.png")
     
     
     # scatter
@@ -115,14 +124,48 @@ def run_hypothesis_testing(df):
     logger = get_run_logger()
     df_2019 = df[df['year'] == 2019]['happiness_score'].dropna()
     df_2020 = df[df['year'] == 2020]['happiness_score'].dropna()
+
+    # mean for each group
+    mean_2019 = df_2019.mean()
+    mean_2020 = df_2020.mean()
     
     t_stat, p_val = stats.ttest_ind(df_2019, df_2020)
     
+    logger.info(f"2019 Mean Happiness: {mean_2019:.4f}")
+    logger.info(f"2020 Mean Happiness: {mean_2020:.4f}")
     logger.info(f"2019 vs 2020 T-Test: t={t_stat:.4f}, p={p_val:.4f}")
     if p_val < 0.05:
         logger.info("Interpretation: There is a statistically significant difference in happiness scores before and during the start of the pandemic.")
     else:
         logger.info("Interpretation: No statistically significant difference found between 2019 and 2020 happiness scores.")
+
+    return t_stat, p_val
+
+@task
+def run_second_hypothesis_test(df):
+    logger = get_run_logger()
+    
+    # Separate years into pre-pandemic and post-pandemic
+    pre_pandemic = df[df['year'].between(2015, 2019)]['happiness_score'].dropna()
+    post_pandemic = df[df['year'].between(2021, 2024)]['happiness_score'].dropna()
+
+    mean_pre = pre_pandemic.mean()
+    mean_post = post_pandemic.mean()
+    
+    # Independent two-sample t-test
+    t_stat, p_val = stats.ttest_ind(pre_pandemic, post_pandemic, equal_var=False)
+    
+    logger.info(f"Pre-Pandemic (2015-2019) Mean Happiness: {mean_pre:.4f}")
+    logger.info(f"Post-Pandemic (2021-2024) Mean Happiness: {mean_post:.4f}")
+    logger.info(f"Pre vs Post Pandemic T-Test: t={t_stat:.4f}, p={p_val:.4f}")
+    
+    if p_val < 0.05:
+        if mean_post > mean_pre:
+            logger.info("Interpretation: Significant increase in global happiness in the post-pandemic era compared to pre-pandemic.")
+        else:
+            logger.info("Interpretation: Significant decrease/stagnation in global happiness in the post-pandemic era compared to pre-pandemic.")
+    else:
+        logger.info("Interpretation: No significant difference found between pre-pandemic and post-pandemic happiness eras.")
 
     return t_stat, p_val
 
