@@ -5,8 +5,8 @@ from prefect import task, flow
 arr = np.array([12.0, 15.0, np.nan, 14.0, 10.0, np.nan, 18.0, 14.0, 16.0, 22.0, np.nan, 13.0])
 
 @task
-def create_series():
-    return pd.Series(arr, name='values')
+def create_series(data):
+    return pd.Series(data, name='values')
 
 @task
 def clean_data(series):
