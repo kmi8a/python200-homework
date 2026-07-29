@@ -1,0 +1,20 @@
+{
+    "python_version": "3.10.6",
+    "scikit_learn_version": "1.7.2",
+    "feature_names": [
+        "temperature_2m_max",
+        "temperature_2m_min",
+        "precipitation_sum",
+        "wind_speed_10m_max"
+    ],
+    "best_hyperparameters": {
+        "classifier__C": 10.0
+    },
+    "test_auc": 0.78003003003003,
+    "location": {
+        "city": "Charlotte, NC",
+        "latitude": 35.23,
+        "longitude": -80.84
+    },
+    "label_thresholds_description": "Good for running defined as: temperature_2m_max between 45\u00b0F and 85\u00b0F, temperature_2m_min >= 35\u00b0F, precipitation_sum < 3.0 mm, wind_speed_10m_max < 30 km/h."
+}
