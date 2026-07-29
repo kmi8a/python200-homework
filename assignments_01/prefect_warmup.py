@@ -17,14 +17,14 @@ def summarize_data(series):
     return {'mean': series.mean(), 'median': series.median(), 'std': series.std(), 'mode': series.mode()[0]}
 
 @flow
-def data_pipeline(arr):
+def pipeline_flow(arr):
     series = create_series(arr)
     cleaned_series = clean_data(series)
     return summarize_data(cleaned_series)
 
 
 if __name__=='__main__':
-    result = data_pipeline(arr)
+    result = pipeline_flow(arr)
     print(result)
 
 ## 1. Why might Prefect be more overhead than it is worth here?
