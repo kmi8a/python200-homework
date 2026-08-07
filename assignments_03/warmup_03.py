@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-
 from sklearn.datasets import load_iris, load_digits
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.preprocessing import StandardScaler
@@ -8,12 +7,8 @@ from sklearn.decomposition import PCA
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import (
-    accuracy_score,
-    classification_report,
-    confusion_matrix,
-    ConfusionMatrixDisplay
-)
+from sklearn.multiclass import OneVsRestClassifier
+from sklearn.metrics import (accuracy_score, classification_report, confusion_matrix, ConfusionMatrixDisplay)
 from pathlib import Path
 
 OUTPUT = Path('outputs/')
@@ -42,7 +37,7 @@ X_test_scaled = scaler.transform(X_test)
 
 print([f"{val:.2f}" for val in X_train_scaled.mean(axis=0)])
 
-## scaler is fit exclusively on X_train to prevent data leakage from the test set.
+# scaler is fit exclusively on X_train to prevent data leakage from the test set.
 
 # --- KNN ---
 # Q1
@@ -65,7 +60,7 @@ y_pred_scaled = knn_scaled.predict(X_test_scaled)
 
 print(f"Accuracy Score: {accuracy_score(y_test, y_pred_scaled):.4f}")
 
-## Scaling makes no difference in accuracy here as all four features are measured in the same units and have comparable scales.
+# Scaling makes no difference in accuracy here as all four features are measured in the same units and have comparable scales.
 
 # Q3
 
@@ -77,7 +72,7 @@ for i, score in enumerate(cv_scores, start=1):
 print(f"\nMean CV Score: {cv_scores.mean():.4f}")
 print(f"Standard Deviation: {cv_scores.std():.4f}")
 
-## This method is more trustworthy, it evaluates the model across different training and validation folds, reducing the variance and the risk of a single train/test split.
+# This method is more trustworthy, it evaluates the model across different training and validation folds, reducing the variance and the risk of a single train/test split.
 
 # Q4
 
@@ -87,7 +82,7 @@ for k in k_values:
     cv_scores = cross_val_score(KNeighborsClassifier(n_neighbors=k), X_train, y_train, cv=5)
     print(f"k={k}: Mean CV Score = {cv_scores.mean():.4f}")
 
-## I would choose k5 or k7 as they have the more balance between high cross-validation performance and stable generalization.
+# I would choose k5 or k7 as they have the more balance between high cross-validation performance and stable generalization.
 
 # --- Classifier Evaluation ---
 # Q1
@@ -105,20 +100,37 @@ plt.close()
 # ---The sklearn API: Decision Trees ---
 # Q1
 
+dt_classifier = DecisionTreeClassifier(max_depth=3, random_state=42)
+dt_classifier.fit(X_train, y_train)
+
+y_pred_dt = dt_classifier.predict(X_test)
+
+print(f"Accuracy Score: {accuracy_score(y_test, y_pred_dt):.4f}\n")
+print("Classification Report:")
+print(classification_report(y_test, y_pred_dt))
+
+# Both Decision Tree and KNN have around the same accuracy.
+
+# Scaled vs. unscaled data would not affect the result for decision trees as they split the data based on a threshold rather than distance.
+
+
 # --- Logistic Regression and Regularization ---
 # Q1
 
 c_values = [0.01, 1.0, 100]
 
 for c in c_values:
-    model = LogisticRegression(C=c, max_iter=1000, random_state=42)
-    #model = LogisticRegression(C=c, max_iter=1000, solver='liblinear')
+    model = OneVsRestClassifier(LogisticRegression(C=c, solver="liblinear", random_state=42))
     model.fit(X_train_scaled, y_train)
-    coef_sum = np.abs(model.coef_).sum()
-    print(f"C={c}: Total coefficient magnitude = {coef_sum:.4f}")
 
-## As C increases, the total coefficient magnitude also increases.
-## regularization is shrinking big values.
+    coef_magnitude = np.sum([np.sum(np.abs(est.coef_)) for est in model.estimators_])
+
+    print(f"C = {c}")
+    print(f"Accuracy: {model.score(X_test_scaled, y_test):.4f}")
+    print(f"Total Coefficient Magnitude: {coef_magnitude:.4f}\n")
+
+# As C increases, the total coefficient magnitude also increases.
+# regularization is shrinking big values.
 
 # --- PCA ---
 
