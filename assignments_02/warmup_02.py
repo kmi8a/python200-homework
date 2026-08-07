@@ -33,8 +33,8 @@ print(x.shape)
 x = x.reshape(-1, 1)
 print(x.shape)
 
-# scikit-learn needs x to be 2d in order to perfom the calculations, if the data is 1d
-# it wouldn't know if the data represents 6 different types of data or 6 observations of the same type.
+# In scikit-learn x needs to be 2d in order to perfom the calculations, if the data is 1d it wouldn't know if the data
+# represents 6 different types of data or 6 observations of the same type.
 
 ## scikit-learn Question 3
 
@@ -54,7 +54,7 @@ plt.title("Clusters Found by K-Means")
 plt.xlabel("X")
 plt.ylabel("Y", rotation=0)
 plt.legend()
-plt.savefig(OUTPUT / "correlation_heatmap.png")
+plt.savefig(OUTPUT / "kmeans_clusters.png")
 
 ## Linear Regression Question 1
 
