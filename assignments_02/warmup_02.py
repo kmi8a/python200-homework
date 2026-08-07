@@ -60,9 +60,9 @@ plt.savefig(OUTPUT / "kmeans_clusters.png")
 
 np.random.seed(42)
 num_patients = 100
-age    = np.random.randint(20, 65, num_patients).astype(float)
+age = np.random.randint(20, 65, num_patients).astype(float)
 smoker = np.random.randint(0, 2, num_patients).astype(float)
-cost   = 200 * age + 15000 * smoker + np.random.normal(0, 3000, num_patients)
+cost = 200 * age + 15000 * smoker + np.random.normal(0, 3000, num_patients)
 
 plt.figure(figsize=(8, 6))
 plt.scatter(age, cost, c=smoker, cmap='coolwarm', s=60, alpha=0.7)
@@ -78,9 +78,7 @@ plt.savefig(OUTPUT / "cost_vs_age.png")
 x = age.reshape(-1, 1)
 y = cost
 
-x_train, x_test, y_train, y_test = train_test_split(
-    x, y, test_size=0.2, random_state=42
-)
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
 
 print(f'X_train shape: {x_train.shape}')
 print(f'X_test shape: {x_test.shape}')
@@ -109,9 +107,7 @@ print("R²:", r2)
 
 x_full = np.column_stack([age, smoker])
 
-x_train, x_test, y_train, y_test = train_test_split(
-    x_full, y, test_size=0.2, random_state=42
-)
+x_train, x_test, y_train, y_test = train_test_split(x_full, y, test_size=0.2, random_state=42)
 
 full_model = LinearRegression()
 full_model.fit(x_train, y_train)
