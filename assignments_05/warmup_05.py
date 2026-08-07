@@ -288,24 +288,29 @@ print(result)
 
 # Ollama Q1
 
-user_text = """i want to travel all over the world so i can meet new people, new cultures, new foods and learn new languages"""
+# Ollama output
+
+"""
+Ollama Terminal Output:
+Thinking...
+Okay, the user wants me to explain what a large language model is in two sentences. Let me start by recalling what I know about them. First, large language models are big artificial intelligence models. They can 
+understand and generate text, right? They're used in various fields like AI, NLP, etc.
+
+Wait, but how to make that two sentences? Maybe start with the definition. "A large language model is a type of artificial intelligence that can understand and generate human-like text, making it useful for 
+various tasks such as language processing and creative writing." Then, add another sentence to expand. Maybe mention their capabilities like summarizing or answering questions. So, "These models are trained on 
+massive datasets and can handle complex tasks, making them powerful tools in various fields including science, technology, and daily life." That should cover it in two sentences.
+...done thinking.
+
+A large language model is a type of artificial intelligence that can understand and generate human-like text, enabling tasks such as language processing and creative writing. These models are trained on massive 
+datasets and can handle complex tasks, making them powerful tools in various fields like science, technology, and daily life.
+"""
+
+#OpenAI Output
 
 prompt = "Explain what a large language model is in two sentences."
 
 result = get_completion(prompt)
-print(result)
-
-
-# Ollama output
-# Thinking...
-# Okay, the user wants me to explain what a large language model is in two sentences. Let me start by recalling what I know about them. First, large language models are big artificial intelligence models. They can 
-# understand and generate text, right? They're used in various fields like AI, NLP, etc.
-# Wait, but how to make that two sentences? Maybe start with the definition. "A large language model is a type of artificial intelligence that can understand and generate human-like text, making it useful for 
-# various tasks such as language processing and creative writing." Then, add another sentence to expand. Maybe mention their capabilities like summarizing or answering questions. So, "These models are trained on 
-# massive datasets and can handle complex tasks, making them powerful tools in various fields including science, technology, and daily life." That should cover it in two sentences.
-# ...done thinking.
-# A large language model is a type of artificial intelligence that can understand and generate human-like text, enabling tasks such as language processing and creative writing. These models are trained on massive 
-# datasets and can handle complex tasks, making them powerful tools in various fields like science, technology, and daily life.
+print(f'OpenAI response: {result}')
 
 # the definition by the OpenAI model is more technical while the definition by the Ollama model uses more accesible vocabulary.
 # Running a model locally has the advantage of not having any attached costs to it, the main disadvantage of running a model locally would limitations on the processing power.
