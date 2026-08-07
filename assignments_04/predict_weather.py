@@ -36,6 +36,8 @@ hypothetical_days = pd.DataFrame(
         [72.0, 52.0, 0.0, 8.5],    # Day 1: Good day (pleasant temp, no rain, light wind)
         [38.0, 25.0, 5.2, 35.0],   # Day 2: Bad day (freezing/cold, heavy rain, high winds)
         [46.0, 33.0, 2.5, 15.0],   # Day 3: Borderline (Cold) (max temp right near the lower bound, light rain)
+        [85.0, 68.0, 0.0, 6.2],    # Day 4: Good day (warm, clear skies, low wind)
+        [55.0, 42.0, 1.8, 22.0],   # Day 5: Borderline/Bad day (cool, light rain, moderately windy)
     ],
     columns=feature_cols,
 )
