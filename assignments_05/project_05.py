@@ -182,7 +182,7 @@ print(f"Result (Is Safe?): {is_safe(unsafe_input)}\n")
 # Task 5: The Chatbot Loop
 
 def run_chatbot():
-    # 1. Initialize conversation history with your system prompt
+    # Initialize conversation history with your system prompt
     messages = [
         {"role": "system", "content": system_prompt}
     ]
@@ -229,8 +229,14 @@ def run_chatbot():
             if raw_bullets:
                 print("\nJob Application Helper: Processing your bullets...")
                 results = rewrite_bullets(raw_bullets)
+
+                # Format results into a readable assistant message for context memory
+                assistant_reply = f"Here are the rewritten bullets I generated:\n{json.dumps(results, indent=2)}"
+                messages.append({"role": "assistant", "content": assistant_reply})
             else:
-                print("\nJob Application Helper: No bullets provided.")
+                assistant_reply = "No bullets provided to rewrite."
+                print(f"\nJob Application Helper: {assistant_reply}")
+                messages.append({"role": "assistant", "content": assistant_reply})
 
         # 6. Check if the user wants a cover letter
         elif "cover letter" in user_input.lower():
@@ -242,11 +248,14 @@ def run_chatbot():
                 letter_opening = generate_cover_letter(job_title, background)
                 print(f"Job Application Helper:\n{letter_opening}\n")
                 
-                # Append the interaction context to messages for conversation memory
-                messages.append({"role": "user", "content": f"I need a cover letter opening for a {job_title} role with this background: {background}"})
+                # Append the detailed context and response to messages for conversation memory
+                user_context = f"I need a cover letter opening for a {job_title} role with this background: {background}"
+                messages.append({"role": "user", "content": user_context})
                 messages.append({"role": "assistant", "content": letter_opening})
             else:
-                print("\nJob Application Helper: Job title and background cannot be empty.")
+                assistant_reply = "Job title and background cannot be empty."
+                print(f"\nJob Application Helper: {assistant_reply}")
+                messages.append({"role": "assistant", "content": assistant_reply})
 
         # 7. Otherwise, handle it as a regular chat turn
         else:
