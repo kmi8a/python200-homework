@@ -189,7 +189,7 @@ for q in questions:
     for node_with_score in response.source_nodes:
         print(f"Node ID: {node_with_score.node.node_id}")
         print(f"Similarity Score: {node_with_score.score:.4f}")
-        print(f"Text Snippet: {node_with_score.node.get_content()[:100]}...")
+        print(f"Text Snippet: {node_with_score.node.get_content()[:150]}...")
         print("-" * 30)
 
 # Query 1
@@ -200,7 +200,7 @@ for q in questions:
 # Question: Did anything unexpected get retrieved?
 # Answer: From the three chunks retrieved, the used one was relevant to the question, but the following two chunks did not seem relevant at all.
 
-# Query 1
+# Query 2
 # Question: Do the retrieved chunks look relevant to the question?
 # Answer: On this case the model retrieved a relevant chunk of information, and i say relevant as the information is contained on one of the documents provided, but for me
 # personally, this document seems not related to this company or to the 'solar energy' industry, seems more like a document from a software company, i would not consider this
