@@ -55,7 +55,7 @@ for q in questions:
     print("A:", response)
     
     for node_with_score in response.source_nodes[:1]:
-        print(f"Node ID: {node_with_score.node.node_id}")
+        print(f"Document Name: {node_with_score.node.metadata.get('file_name', 'Unknown Document')}")
         print(f"Similarity Score: {node_with_score.score:.4f}")
         print(f"Text Snippet: {node_with_score.node.get_content()[:200]}...")
         print("-" * 30)
@@ -73,7 +73,7 @@ response = query_engine.query(q2)
 print("A:", response)
 
 for node_with_score in response.source_nodes:
-    print(f"Node ID: {node_with_score.node.node_id}")
+    print(f"Document Name: {node_with_score.node.metadata.get('file_name', 'Unknown Document')}")
     print(f"Similarity Score: {node_with_score.score:.4f}")
     print(f"Text Snippet: {node_with_score.node.get_content()[:200]}...")
     print("-" * 30)
