@@ -73,10 +73,9 @@ def summarize_column(column: str) -> dict:
         dict: A dictionary of descriptive statistics from pandas describe().
     """
     global df
+    if df is None:
+        return {"error": "Dataset not loaded. Please call load_happiness_data first."}
     try:
-        df = pd.read_csv(DATA_PATH) if os.path.exists(DATA_PATH) else None
-        if df is None:
-            return {"error": "Dataset not found."}
         if column not in df.columns:
             return {"error": f"Column '{column}' not found."}
         if not pd.api.types.is_numeric_dtype(df[column]):
@@ -100,9 +99,10 @@ def compute_correlation(col1: str, col2: str) -> dict:
         dict: Dictionary containing pearson_r and p_value.
     """
     global df
+    if df is None:
+        return {"error": "Dataset not loaded. Please call load_happiness_data first."}
     try:
-        df = pd.read_csv(DATA_PATH) if os.path.exists(DATA_PATH) else None
-        if df is None or col1 not in df.columns or col2 not in df.columns:
+        if col1 not in df.columns or col2 not in df.columns:
             return {"error": "Invalid columns or dataset."}
         
         valid_data = df[[col1, col2]].dropna()
@@ -131,13 +131,9 @@ def get_top_n_countries(column: str, year: int, n: int = 5) -> list:
         list: Top countries list of dictionaries, each with 'country' and the requested column value.
     """
     global df
+    if df is None:
+        return []
     try:
-        if df is None:
-            if os.path.exists(DATA_PATH):
-                df = pd.read_csv(DATA_PATH)
-            else:
-                return []
-        
         year_cols = [c for c in df.columns if c.lower() == 'year']
         country_cols = [c for c in df.columns if c.lower() in ['country', 'country name', 'region']]
         
