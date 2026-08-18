@@ -25,17 +25,18 @@ df= None
 # Task 1: Define Your Tools
 
 @tool
-def load_happiness_data() -> dict:
+def load_happiness_data() -> pd.DataFrame:
     """Load the World Happiness dataset into memory and return the pandas DataFrame.
 
-  This function attempts to load a pre-merged CSV file from DATA_PATH. If that
-  file does not exist, it falls back to loading and merging all yearly CSV files
-  found in the resources directory (DATA_DIR).
+    This function attempts to load a pre-merged CSV file from DATA_PATH. If that
+    file does not exist, it falls back to loading and merging all yearly CSV files
+    found in the resources directory (DATA_DIR).
 
-  Returns:
-      pd.DataFrame: The loaded World Happiness dataset, or an error dictionary if
-      loading fails.
-  """
+    Returns:
+        pd.DataFrame: The loaded World Happiness dataset, or an error dictionary if
+        loading fails.
+    """
+    global df
     try:
         if os.path.exists(DATA_PATH):
             df = pd.read_csv(DATA_PATH)
@@ -71,6 +72,7 @@ def summarize_column(column: str) -> dict:
     Returns:
         dict: A dictionary of descriptive statistics from pandas describe().
     """
+    global df
     try:
         df = pd.read_csv(DATA_PATH) if os.path.exists(DATA_PATH) else None
         if df is None:
@@ -97,6 +99,7 @@ def compute_correlation(col1: str, col2: str) -> dict:
     Returns:
         dict: Dictionary containing pearson_r and p_value.
     """
+    global df
     try:
         df = pd.read_csv(DATA_PATH) if os.path.exists(DATA_PATH) else None
         if df is None or col1 not in df.columns or col2 not in df.columns:
@@ -115,9 +118,9 @@ def compute_correlation(col1: str, col2: str) -> dict:
 
 
 @tool
-def get_top_n_countries(column: str, year: int, n: int = 5) -> dict:
+def get_top_n_countries(column: str, year: int, n: int = 5) -> list:
     """
-    Return the top N countries ranked by a given column for a specific year.
+    Return the top N countries ranked by a given column for a specific year as a list of dicts.
 
     Args:
         column (str): Column to rank by.
@@ -125,31 +128,35 @@ def get_top_n_countries(column: str, year: int, n: int = 5) -> dict:
         n (int): Number of top countries.
 
     Returns:
-        dict: Top countries list.
+        list: Top countries list of dictionaries, each with 'country' and the requested column value.
     """
+    global df
     try:
-        df = pd.read_csv(DATA_PATH) if os.path.exists(DATA_PATH) else None
         if df is None:
-            return {"error": "Dataset not found."}
+            if os.path.exists(DATA_PATH):
+                df = pd.read_csv(DATA_PATH)
+            else:
+                return []
         
         year_cols = [c for c in df.columns if c.lower() == 'year']
         country_cols = [c for c in df.columns if c.lower() in ['country', 'country name', 'region']]
         
         if not year_cols or not country_cols or column not in df.columns:
-            return {"error": "Required columns not found."}
+            return []
         
         year_col, country_col = year_cols[0], country_cols[0]
         filtered = df[df[year_col] == year]
         
         if filtered.empty:
-            return {"error": f"No data found for year {year}."}
+            return []
         
         sorted_df = filtered.sort_values(by=column, ascending=False).head(n)
         result_list = [{"country": row[country_col], column: row[column]} for _, row in sorted_df.iterrows()]
         
-        return {"top_countries": result_list}
+        return result_list
     except Exception as e:
-        return {"error": str(e)}
+        print(f"Error in get_top_n_countries: {e}")
+        return []
 
 
 # Task 2: Build the Agent
