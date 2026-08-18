@@ -135,8 +135,7 @@ def get_top_n_countries(column: str, year: int, n: int = 5) -> list | dict:
         n (int): Number of top countries.
 
     Returns:
-        list | dict: Top countries list of dictionaries, each with 'country', 'region', 
-        and the requested column value, or an error dictionary.
+        list | dict: Top countries list of dictionaries, each with 'country' and the requested column value, or an error dictionary.
     """
     global df
     if df is None:
@@ -151,11 +150,9 @@ def get_top_n_countries(column: str, year: int, n: int = 5) -> list | dict:
         
         sorted_df = filtered.sort_values(by=column, ascending=False).head(n)
         
-        # Added 'region' alongside 'country' and the dynamic column value
         result_list = [
             {
                 "country": row['Country'], 
-                "region": row.get('region', 'Unknown'), 
                 column: row[column]
             } 
             for _, row in sorted_df.iterrows()
