@@ -25,15 +25,19 @@ df= None
 # Task 1: Define Your Tools
 
 @tool
-def load_happiness_data() -> pd.DataFrame:
-    """Load the World Happiness dataset into memory and return the pandas DataFrame.
+def load_happiness_data() -> dict:
+    """Load the World Happiness dataset into memory, update the global dataframe 'df', 
+    and return a dictionary containing its shape and column names.
 
     This function attempts to load a pre-merged CSV file from DATA_PATH. If that
     file does not exist, it falls back to loading and merging all yearly CSV files
     found in the resources directory (DATA_DIR).
 
+    NOTE: This function updates the global variable `df`. Do NOT pass the return value 
+    of this function into `pd.DataFrame()`. Use the global variable `df` for data analysis.
+
     Returns:
-        pd.DataFrame: The loaded World Happiness dataset, or an error dictionary if
+        dict: A dictionary containing 'shape' and 'columns', or an error dictionary if
         loading fails.
     """
     global df
@@ -56,7 +60,10 @@ def load_happiness_data() -> pd.DataFrame:
             dfs = [pd.read_csv(f) for f in csv_files]
             df = pd.concat(dfs, ignore_index=True)
 
-        return df
+        return {
+            "shape": df.shape,
+            "columns": list(df.columns)
+        }
     except Exception as e:
         return {"error": f"Critical error loading data: {str(e)}"}
 
@@ -70,7 +77,7 @@ def summarize_column(column: str) -> dict:
         column (str): The name of the column to summarize.
 
     Returns:
-        dict: A dictionary of descriptive statistics from pandas describe().
+        dict: A dictionary of descriptive statistics from pandas describe(), or an error dictionary.
     """
     global df
     if df is None:
@@ -96,7 +103,7 @@ def compute_correlation(col1: str, col2: str) -> dict:
         col2 (str): The second numeric column.
 
     Returns:
-        dict: Dictionary containing pearson_r and p_value.
+        dict: Dictionary containing pearson_r and p_value, or an error dictionary.
     """
     global df
     if df is None:
@@ -118,7 +125,7 @@ def compute_correlation(col1: str, col2: str) -> dict:
 
 
 @tool
-def get_top_n_countries(column: str, year: int, n: int = 5) -> list:
+def get_top_n_countries(column: str, year: int, n: int = 5) -> list | dict:
     """
     Return the top N countries ranked by a given column for a specific year as a list of dicts.
 
@@ -128,31 +135,35 @@ def get_top_n_countries(column: str, year: int, n: int = 5) -> list:
         n (int): Number of top countries.
 
     Returns:
-        list: Top countries list of dictionaries, each with 'country' and the requested column value.
+        list | dict: Top countries list of dictionaries, each with 'country', 'region', 
+        and the requested column value, or an error dictionary.
     """
     global df
     if df is None:
-        return []
+        return {"error": "Dataset not loaded. Please call load_happiness_data first."}
     try:
-        year_cols = [c for c in df.columns if c.lower() == 'year']
-        country_cols = [c for c in df.columns if c.lower() in ['country', 'country name', 'region']]
+        if 'year' not in df.columns or 'Country' not in df.columns or column not in df.columns:
+            return {"error": "Required columns ('year', 'Country', or requested column) not found in dataset."}
         
-        if not year_cols or not country_cols or column not in df.columns:
-            return []
-        
-        year_col, country_col = year_cols[0], country_cols[0]
-        filtered = df[df[year_col] == year]
-        
+        filtered = df[df['year'] == year]
         if filtered.empty:
-            return []
+            return {"error": f"No data found for year {year}."}
         
         sorted_df = filtered.sort_values(by=column, ascending=False).head(n)
-        result_list = [{"country": row[country_col], column: row[column]} for _, row in sorted_df.iterrows()]
+        
+        # Added 'region' alongside 'country' and the dynamic column value
+        result_list = [
+            {
+                "country": row['Country'], 
+                "region": row.get('region', 'Unknown'), 
+                column: row[column]
+            } 
+            for _, row in sorted_df.iterrows()
+        ]
         
         return result_list
     except Exception as e:
-        print(f"Error in get_top_n_countries: {e}")
-        return []
+        return {"error": str(e)}
 
 
 # Task 2: Build the Agent
@@ -162,7 +173,10 @@ model = OpenAIServerModel(api_key=api_key, model_id="gpt-4o-mini")
 SYSTEM_PROMPT = """
 - You are a data analyst assistant for the World Happiness dataset.
 - Use the available tools for loading data, summarizing columns, computing correlations, and ranking countries.
-- Write Python code directly only when the tools are not sufficient (for example, when creating custom plots or computing something the tools don't cover).
+- CRITICAL: `load_happiness_data()` returns a metadata dictionary with 'shape' and 'columns'. When you write custom Python code that requires direct pandas operations, 
+  load the dataset locally inside your code block using `df = pd.read_csv(DATA_PATH)` or `pd.read_csv("resources/merged_happiness.csv")` since the agent's execution 
+  sandbox runs in an isolated scope.
+- PLOTTING RULE: When creating multi-category charts, use a wide figure size (e.g., `figsize=(14, 7)`), place the legend outside using `plt.legend(title='Region', bbox_to_anchor=(1.02, 1), loc='upper left')`, and add `plt.subplots_adjust(right=0.75)` before saving to prevent the chart area from looking squished.
 - ALWAYS save generated plots using `plt.savefig(output_dir + 'filename.png')` instead of using `plt.show()`, since this runs in a headless environment.
 - Be concise and student-friendly in your responses.
 """
