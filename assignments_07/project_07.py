@@ -152,7 +152,8 @@ def get_top_n_countries(column: str, year: int, n: int = 5) -> list | dict:
         
         result_list = [
             {
-                row['Country']: float(row[column])
+                "country": row['Country'],
+                column: float(row[column])
             } 
             for _, row in sorted_df.iterrows()
         ]
