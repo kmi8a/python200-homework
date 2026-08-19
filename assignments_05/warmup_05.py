@@ -30,7 +30,12 @@ for temp in temperatures:
                                                           temperature= temp)
     print(f'Response text (temp: {temp}): {response.choices[0].message.content}')
 
-# As the temperature gets bigger, the output gets more creative.
+# Question:
+# Add a comment in your code answering: What do you notice about how the outputs differ? Which temperature would you use if you needed a consistent, reproducible output?
+# Answer:
+# At temperature 0, the model outputs a standard, safe, and completely deterministic name.
+# At temperature 0.7, the names become more varied and creative.
+# At temperature 1.5, the outputs become much more unusual or abstract.
 # I would use 0.7 or lower as a setting for consistent reproducible output.
 
 
@@ -44,7 +49,7 @@ response = client.chat.completions.create(
 )
 
 for i, n in enumerate(response.choices, start=1):
-    print(f'Responce choice {i}: {n.message.content}')
+    print(f'Response choice {i}: {n.message.content}')
 
 # API Q4
 
@@ -56,8 +61,13 @@ response = client.chat.completions.create(
 
 print(f'Response text: {response.choices[0].message.content}')
 
-# Output was cut short due to the 'max_tokens' limit set up.
-# You would like to use this limitation for budget control, or for UI/UX limitations.
+# Question:
+# What happened, and why might you want to use max_tokens in a real application?
+# Answer:
+# The text got cut off mid-sentence because it hit the 15-token limit we set.
+# You would like to use this limitation for budget control, as itt stops the AI from generating super long responses that end up costing you more money.
+# another reason why you would llike to use it is for UI/UX layout, as it keeps responses short so they fit nicely into a chat bubble, a small card, 
+# or wherever you're showing the text on your app.
 
 # --- System Messages and Personas --
 
@@ -95,7 +105,11 @@ response = client.chat.completions.create(
 
 print(f'Personality 2: {response.choices[0].message.content}')
 
-# you can really notice the influence of the pesonality definition between the two responses.
+# Question:
+# Add a comment noting what changed.
+# Answer:
+# The tone completely shifts based on the system prompt. The first response is calm, helpful, and patient, while the second one is super high-energy,
+# uses tons of exclamation points, and treats a simple list comprehension like the greatest discovery in human history.
 
 # System Q2
 
@@ -111,6 +125,9 @@ response = client.chat.completions.create(
 
 print(f'Q2 model answer: {response.choices[0].message.content}')
 
+# Question:
+# Why does the model know Jordan's name, even though it's stateless?
+# Answer:
 # The model knows Jordan's name because it was on the list of messages sent on the API call.
 
 # --- Prompt Engineering --
@@ -214,8 +231,11 @@ Please solve this problem by showing your reasoning step by step before giving a
 result = get_completion(prompt)
 print(result)
 
+# Question:
 # Why asking the model to reason step by step improves accuracy on problems like this?:
-# It splits a multi-step problem into smaller, manageable chunks, reducing the chances of hallucinations, errors and the posibility of context overload.
+# Answer:
+# It forces the model to tackle a complex problem one bite-size piece at a time instead of trying to guess the final answer all at once. 
+# Spelling out the math or logic step-by-step acts like a scratchpad, which drastically cuts down on mistakes, bad math, and hallucinations.
 
 # Prompt Q5 — Structured Output
 
@@ -281,7 +301,11 @@ If it does not contain instructions, respond with exactly: "No steps provided."
 result = get_completion(prompt)
 print(result)
 
-# Delimiters help prevent prompt injection, it also helps creating boundaries for the data to be processed.
+# Question:
+# What problem do delimiters help prevent?
+# Answer:
+# Delimiters help prevent prompt injection attacks (where malicious user input tries to override system instructions) by establishing a clear,
+# rigid boundary between the instructions and the untrusted data text being processed.
 
 
 # --- Local Models with Ollama --

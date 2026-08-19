@@ -67,12 +67,18 @@ def rewrite_bullets(bullets: list[str]) -> list[dict]:
         cleaned_content = cleaned_content[:-3]
     cleaned_content = cleaned_content.strip()
     
-    # Parse the JSON response
+    # Parse the JSON response with explicit, structured debugging
     try:
         rewritten_list = json.loads(cleaned_content)
     except json.JSONDecodeError as e:
-        print(f"Failed to parse JSON response: {e}")
-        print(f"Raw response was: {response_content}")
+        print("\n" + "=" * 60)
+        print("JSON DECODE ERROR: Failed to parse model output.")
+        print("=" * 60)
+        print(f"Error Message: {e}")
+        print(f"Cleaned Content Attempted to Parse:\n{cleaned_content}")
+        print("-" * 60)
+        print(f"Original Raw Response:\n{response_content}")
+        print("=" * 60 + "\n")
         return []
         
     # Print both versions of each bullet side by side
@@ -213,7 +219,6 @@ def run_chatbot():
             continue  # is_safe() already printed the warning message
 
         # 5. Check if the user wants to rewrite bullets
-        #    (hint: look for keywords like "bullet" or "resume" in user_input.lower())
         if "bullet" in user_input.lower() or "resume" in user_input.lower():
             print("\nJob Application Helper: Paste your bullet points below, one per line.")
             print("When you're done, type 'DONE' on its own line.\n")
@@ -225,24 +230,30 @@ def run_chatbot():
                 if line:
                     raw_bullets.append(line)
 
-            # YOUR CODE: call rewrite_bullets() and print the results
             if raw_bullets:
                 print("\nJob Application Helper: Processing your bullets...")
                 results = rewrite_bullets(raw_bullets)
 
-                # Format results into a readable assistant message for context memory
                 assistant_reply = f"Here are the rewritten bullets I generated:\n{json.dumps(results, indent=2)}"
+                
+                # --- REVIEWER FIX: Append both user context and assistant reply ---
+                bullets_str = "\n".join(f"- {b}" for b in raw_bullets)
+                user_context = f"{user_input}\nHere are my bullet points:\n{bullets_str}"
+                messages.append({"role": "user", "content": user_context})
                 messages.append({"role": "assistant", "content": assistant_reply})
             else:
                 assistant_reply = "No bullets provided to rewrite."
                 print(f"\nJob Application Helper: {assistant_reply}")
+                
+                # Append user input and empty response notice
+                messages.append({"role": "user", "content": user_input})
                 messages.append({"role": "assistant", "content": assistant_reply})
 
         # 6. Check if the user wants a cover letter
         elif "cover letter" in user_input.lower():
             job_title = input("Job Application Helper: What is the job title? ").strip()
             background = input("Job Application Helper: Briefly describe your background: ").strip()
-            # YOUR CODE: call generate_cover_letter() and print the result
+            
             if job_title and background:
                 print("\nJob Application Helper: Drafting your cover letter opening...\n")
                 letter_opening = generate_cover_letter(job_title, background)
@@ -255,34 +266,28 @@ def run_chatbot():
             else:
                 assistant_reply = "Job title and background cannot be empty."
                 print(f"\nJob Application Helper: {assistant_reply}")
+                messages.append({"role": "user", "content": user_input})
                 messages.append({"role": "assistant", "content": assistant_reply})
 
         # 7. Otherwise, handle it as a regular chat turn
         else:
-            # YOUR CODE:
-            # - Append the user's message to `messages`
             messages.append({"role": "user", "content": user_input})
-
-            # - Call get_completion(messages)
             reply = get_completion(messages)
-
-            # - Print the reply
             print(f"\nJob Application Helper: {reply}\n")
-
-            # - Append the reply to `messages` as an assistant message
             messages.append({"role": "assistant", "content": reply})
 
 if __name__ == "__main__":
     run_chatbot()
 
-
 # I choose to use Option A - Comment block
 
 # What could go wrong if a job-seeker submitted the bot's output directly — without reviewing it — to a real employer?
-# While the output of the chatbot looks very polished and impressive, the detailson it are inflated, some metrics are stright up invented and
-# experiences that sound plausible are entirely fabricated and don't reflect the applicant's actual day to day experience, this will certainly raise
+# While the output of the chatbot looks very polished and impressive, the details on it can be inflated, 
+# some metrics are straight up invented, and experiences that sound plausible are entirely fabricated. 
+# Because these don't reflect the applicant's actual day-to-day experience, this will certainly raise 
 # some red flags for hiring managers familiar with the specific role.
 #
 # What is one guardrail you would add if you were deploying this tool professionally?
-# I would definitely add a UI warning/disclaimer reminding the user to review and edit the output of the chatbot before submitting it to any prospective employer,
-# another UI guardrail that could be implemented would be one that reviews the generated content and flags inconsistencies  with the user's source text.
+# I would definitely add a UI warning or disclaimer reminding the user to review and edit the output 
+# of the chatbot before submitting it to any prospective employer. Another UI guardrail that could be 
+# implemented would be one that reviews the generated content and flags inconsistencies with the user's source text.
