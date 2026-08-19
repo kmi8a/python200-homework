@@ -231,8 +231,7 @@ print(result)
 # Question:
 # Why asking the model to reason step by step improves accuracy on problems like this?:
 # Answer:
-# It forces the model to tackle a complex problem one bite-size piece at a time instead of trying to guess the final answer all at once. 
-# Spelling out the math or logic step-by-step acts like a scratchpad, which drastically cuts down on mistakes, bad math, and hallucinations.
+# It forces the model to tackle a complex problem one bite-size piece at a time instead of trying to guess the final answer all at once. Spelling out the math or logic step-by-step acts like a scratchpad, which drastically cuts down on mistakes, bad math, and hallucinations.
 
 # Prompt Question 5 — Structured Output
 
@@ -301,8 +300,7 @@ print(result)
 # Question:
 # What problem do delimiters help prevent?
 # Answer:
-# Delimiters help prevent prompt injection by clearly separating the instructions from the untrusted text being analyzed. 
-# This makes it less likely the model will treat the input text as if it were part of the prompt’s instructions.
+# Delimiters help prevent prompt injection by clearly separating the instructions from the untrusted text being analyzed, so the model is less likely to treat the input as part of the prompt.
 
 
 # --- Local Models with Ollama --
