@@ -43,7 +43,7 @@ def rewrite_bullets(bullets: list[str]) -> list[dict]:
     You are a professional resume coach helping a career changer.
     Rewrite each resume bullet point below to be more specific, results-oriented, and compelling.
     Use strong action verbs. Do not invent facts that aren't implied by the original.
-    Return ONLY a valid JSON list. Each item should have two keys:
+    Return ONLY a valid JSON list of objects. Each object must have two keys:
     "original" (the original bullet) and "improved" (your rewritten version).
     
     Bullet points:
@@ -54,7 +54,7 @@ def rewrite_bullets(bullets: list[str]) -> list[dict]:
     
     messages = [{"role": "user", "content": prompt}]
     
-    # Call the previously defined get_completion helper function
+    # Call the completion helper function
     response_content = get_completion(messages)
     
     # Clean up potential markdown formatting block wrappers if the model included them
@@ -67,22 +67,17 @@ def rewrite_bullets(bullets: list[str]) -> list[dict]:
         cleaned_content = cleaned_content[:-3]
     cleaned_content = cleaned_content.strip()
     
-    # Parse the JSON response with explicit, structured debugging
+    # Parse the JSON response with focused error handling
     try:
         rewritten_list = json.loads(cleaned_content)
     except json.JSONDecodeError as e:
-        print("\n" + "=" * 60)
-        print("JSON DECODE ERROR: Failed to parse model output.")
-        print("=" * 60)
-        print(f"Error Message: {e}")
-        print(f"Cleaned Content Attempted to Parse:\n{cleaned_content}")
-        print("-" * 60)
-        print(f"Original Raw Response:\n{response_content}")
-        print("=" * 60 + "\n")
+        print(f"Failed to parse JSON response: {e}")
+        print(f"Raw response: {response_content}")
         return []
         
     # Print both versions of each bullet side by side
-    print(f"\n{'ORIGINAL BULLET':<40} | {'IMPROVED BULLET':<40} \n")
+    print(f"\n{'ORIGINAL BULLET':<40} | {'IMPROVED BULLET':<40}")
+    print("-" * 83)
     for item in rewritten_list:
         orig = item.get("original", "")
         imp = item.get("improved", "")
@@ -233,21 +228,14 @@ def run_chatbot():
             if raw_bullets:
                 print("\nJob Application Helper: Processing your bullets...")
                 results = rewrite_bullets(raw_bullets)
-
                 assistant_reply = f"Here are the rewritten bullets I generated:\n{json.dumps(results, indent=2)}"
-                
-                # --- REVIEWER FIX: Append both user context and assistant reply ---
-                bullets_str = "\n".join(f"- {b}" for b in raw_bullets)
-                user_context = f"{user_input}\nHere are my bullet points:\n{bullets_str}"
-                messages.append({"role": "user", "content": user_context})
-                messages.append({"role": "assistant", "content": assistant_reply})
             else:
                 assistant_reply = "No bullets provided to rewrite."
                 print(f"\nJob Application Helper: {assistant_reply}")
-                
-                # Append user input and empty response notice
-                messages.append({"role": "user", "content": user_input})
-                messages.append({"role": "assistant", "content": assistant_reply})
+
+            # --- REVIEWER FIX: Append exact user input and actual assistant reply ---
+            messages.append({"role": "user", "content": user_input})
+            messages.append({"role": "assistant", "content": assistant_reply})
 
         # 6. Check if the user wants a cover letter
         elif "cover letter" in user_input.lower():
@@ -258,16 +246,14 @@ def run_chatbot():
                 print("\nJob Application Helper: Drafting your cover letter opening...\n")
                 letter_opening = generate_cover_letter(job_title, background)
                 print(f"Job Application Helper:\n{letter_opening}\n")
-                
-                # Append the detailed context and response to messages for conversation memory
-                user_context = f"I need a cover letter opening for a {job_title} role with this background: {background}"
-                messages.append({"role": "user", "content": user_context})
-                messages.append({"role": "assistant", "content": letter_opening})
+                assistant_reply = letter_opening
             else:
                 assistant_reply = "Job title and background cannot be empty."
                 print(f"\nJob Application Helper: {assistant_reply}")
-                messages.append({"role": "user", "content": user_input})
-                messages.append({"role": "assistant", "content": assistant_reply})
+                
+            # --- REVIEWER FIX: Append exact user input and actual assistant reply ---
+            messages.append({"role": "user", "content": user_input})
+            messages.append({"role": "assistant", "content": assistant_reply})
 
         # 7. Otherwise, handle it as a regular chat turn
         else:

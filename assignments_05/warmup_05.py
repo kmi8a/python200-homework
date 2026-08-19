@@ -16,7 +16,7 @@ response = client.chat.completions.create(
 
 print(f'Response text: {response.choices[0].message.content}')
 print(f'Model used:{response.model}')
-print(f'Total tokens: {response.usage.total_tokens}')
+print(f'Total tokens used: {response.usage.total_tokens}')
 
 # API Q2
 
@@ -65,9 +65,8 @@ print(f'Response text: {response.choices[0].message.content}')
 # What happened, and why might you want to use max_tokens in a real application?
 # Answer:
 # The text got cut off mid-sentence because it hit the 15-token limit we set.
-# You would like to use this limitation for budget control, as itt stops the AI from generating super long responses that end up costing you more money.
-# another reason why you would llike to use it is for UI/UX layout, as it keeps responses short so they fit nicely into a chat bubble, a small card, 
-# or wherever you're showing the text on your app.
+# In a real application, you would use max_tokens for budget control (to prevent runaway generations that spike API costs) 
+# or for UI/UX constraints (to ensure text fits nicely inside a fixed-size chat bubble).
 
 # --- System Messages and Personas --
 
@@ -128,7 +127,8 @@ print(f'Q2 model answer: {response.choices[0].message.content}')
 # Question:
 # Why does the model know Jordan's name, even though it's stateless?
 # Answer:
-# The model knows Jordan's name because it was on the list of messages sent on the API call.
+# The model successfully recalls Jordan's name. it knows the name because the previous messages (the user introduction and assistant response)
+# were explicitly included in the array of messages sent within that same API call.
 
 # --- Prompt Engineering --
 
@@ -140,13 +140,13 @@ def get_completion(prompt: str, model="gpt-4o-mini", temperature=0):
     )
     return response.choices[0].message.content
 
-# Prompt Q1 — Zero-Shot
-
 reviews = [
     "The onboarding process was smooth and the team was welcoming.",
     "The software crashes constantly and support never responds.",
     "Great price, but the documentation is nearly impossible to follow."
 ]
+
+# Prompt Q1 — Zero-Shot
 
 prompt = f"""
     Classify the sentiment of each review below as positive, negative, or mixed.
@@ -159,6 +159,7 @@ prompt = f"""
 """
 
 result = get_completion(prompt)
+print("--- Zero-Shot Result ---")
 print(result) 
 
 
@@ -178,6 +179,7 @@ prompt = f"""
 """
 
 result = get_completion(prompt)
+print("\n--- One-Shot Result ---")
 print(result) 
 
 # Prompt Q3 — Few-Shot
@@ -202,21 +204,16 @@ prompt = f"""
 """
 
 result = get_completion(prompt)
+print("\n--- Few-Shot Result ---")
 print(result) 
 
-# 1. Zero-Shot Prompting:
-#    - Choose for straightforward, general tasks where the model already has strong baseline
-#      knowledge (e.g., standard sentiment classification, basic translation, summarizing text).
-#    - Pros/Cons: Fast and uses the fewest tokens, but less reliable for specialized formatting or nuanced rules.
-#
-# 2. One-Shot Prompting:
-#    - Choose when you need to guide the model toward a very specific output format, 
-#      style, or classification that a zero-shot prompt might misinterpret.
-#    - Pros/Cons: Balances token efficiency with a clear demonstration of expectations.
-#
-# 3. Few-Shot Prompting:
-#    - When to choose: For complex, ambiguous, or highly specialized tasks.
-#    - Pros/Cons: Highly accurate and reliable at enforcing consistency, but consumes more tokens and costs more per request.
+# 1. Zero-Shot: Ideal for straightforward tasks where the model already has strong baseline knowledge. 
+#    It's the most token-efficient approach, but provides no pattern or formatting guardrails.
+# 2. One-Shot: Introducing a single example helps steer the model toward a precise output style, 
+#    reducing ambiguity without heavily increasing token overhead.
+# 3. Few-Shot: Providing multiple varied examples (positive, negative, and mixed) gives the model a clear 
+#    baseline pattern. This drastically improves consistency and accuracy on nuanced or multi-class tasks, 
+#    though it costs more in tokens.
 
 # Prompt Q4 — Chain of Thought
 
