@@ -15,7 +15,7 @@ response = client.chat.completions.create(
 )
 
 print(f'Response text: {response.choices[0].message.content}')
-print(f'Model used:{response.model}')
+print(f'Model used: {response.model}')
 print(f'Total tokens used: {response.usage.total_tokens}')
 
 # API Q2
@@ -36,7 +36,7 @@ for temp in temperatures:
 # At temperature 0, the model outputs a standard, safe, and completely deterministic name.
 # At temperature 0.7, the names become more varied and creative.
 # At temperature 1.5, the outputs become much more unusual or abstract.
-# I would use 0.7 or lower as a setting for consistent reproducible output.
+# I would use 0 as a setting for consistent reproducible output.
 
 
 # API Q3
@@ -146,7 +146,7 @@ reviews = [
     "Great price, but the documentation is nearly impossible to follow."
 ]
 
-# Prompt Q1 — Zero-Shot
+# Prompt Question 1 — Zero-Shot
 
 prompt = f"""
     Classify the sentiment of each review below as positive, negative, or mixed.
@@ -163,7 +163,7 @@ print("--- Zero-Shot Result ---")
 print(result) 
 
 
-# Prompt Q2 — One-Shot
+# Prompt Question 2 — One-Shot
 
 prompt = f"""
     Classify the sentiment of each review below as positive, negative, or mixed.
@@ -182,7 +182,7 @@ result = get_completion(prompt)
 print("\n--- One-Shot Result ---")
 print(result) 
 
-# Prompt Q3 — Few-Shot
+# Prompt Question 3 — Few-Shot
 
 prompt = f"""
     Classify the sentiment of each review below as positive, negative, or mixed.
@@ -215,7 +215,7 @@ print(result)
 #    baseline pattern. This drastically improves consistency and accuracy on nuanced or multi-class tasks, 
 #    though it costs more in tokens.
 
-# Prompt Q4 — Chain of Thought
+# Prompt Question 4 — Chain of Thought
 
 prompt = """
 A data engineer earns $85,000 per year. She gets a 12% raise, then 6 months later
@@ -234,7 +234,7 @@ print(result)
 # It forces the model to tackle a complex problem one bite-size piece at a time instead of trying to guess the final answer all at once. 
 # Spelling out the math or logic step-by-step acts like a scratchpad, which drastically cuts down on mistakes, bad math, and hallucinations.
 
-# Prompt Q5 — Structured Output
+# Prompt Question 5 — Structured Output
 
 review = "I've been using this tool for three months. It handles large datasets well, \
 but the UI is clunky and the export options are limited."
@@ -265,7 +265,7 @@ except json.JSONDecodeError:
     print(f"Raw response for debugging:{result}")
 
 
-# Prompt Q6 — Delimiters
+# Prompt Question 6 — Delimiters
 
 # text with instructions
 
@@ -301,8 +301,8 @@ print(result)
 # Question:
 # What problem do delimiters help prevent?
 # Answer:
-# Delimiters help prevent prompt injection attacks (where malicious user input tries to override system instructions) by establishing a clear,
-# rigid boundary between the instructions and the untrusted data text being processed.
+# Delimiters help prevent prompt injection by clearly separating the instructions from the untrusted text being analyzed. 
+# This makes it less likely the model will treat the input text as if it were part of the prompt’s instructions.
 
 
 # --- Local Models with Ollama --
