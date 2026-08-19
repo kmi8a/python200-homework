@@ -85,7 +85,6 @@ def rewrite_bullets(bullets: list[str]) -> list[dict]:
     
     return rewritten_list
 
-# Test the function with starter bullets
 bullets = [
     "Helped customers with their problems",
     "Made reports for the management team",
@@ -215,6 +214,9 @@ def run_chatbot():
 
         # 5. Check if the user wants to rewrite bullets
         if "bullet" in user_input.lower() or "resume" in user_input.lower():
+            # Append the user's initial request to history
+            messages.append({"role": "user", "content": user_input})
+            
             print("\nJob Application Helper: Paste your bullet points below, one per line.")
             print("When you're done, type 'DONE' on its own line.\n")
             raw_bullets = []
@@ -226,33 +228,44 @@ def run_chatbot():
                     raw_bullets.append(line)
 
             if raw_bullets:
+                # Append the actual bullet list provided by the user into history so it's remembered
+                bullet_text_history = "\n".join(f"- {b}" for b in raw_bullets)
+                messages.append({"role": "user", "content": f"Here are my bullet points to rewrite:\n{bullet_text_history}"})
+                
                 print("\nJob Application Helper: Processing your bullets...")
                 results = rewrite_bullets(raw_bullets)
+                
                 assistant_reply = f"Here are the rewritten bullets I generated:\n{json.dumps(results, indent=2)}"
             else:
                 assistant_reply = "No bullets provided to rewrite."
                 print(f"\nJob Application Helper: {assistant_reply}")
 
-            # --- REVIEWER FIX: Append exact user input and actual assistant reply ---
-            messages.append({"role": "user", "content": user_input})
+            # Append the assistant's reply to history
             messages.append({"role": "assistant", "content": assistant_reply})
 
         # 6. Check if the user wants a cover letter
         elif "cover letter" in user_input.lower():
+            # Append the user's initial request to history
+            messages.append({"role": "user", "content": user_input})
+            
             job_title = input("Job Application Helper: What is the job title? ").strip()
             background = input("Job Application Helper: Briefly describe your background: ").strip()
             
             if job_title and background:
+                # Append the specific job details provided by the user into history
+                user_details = f"I am applying for a {job_title} role. My background is: {background}"
+                messages.append({"role": "user", "content": user_details})
+                
                 print("\nJob Application Helper: Drafting your cover letter opening...\n")
                 letter_opening = generate_cover_letter(job_title, background)
                 print(f"Job Application Helper:\n{letter_opening}\n")
+                
                 assistant_reply = letter_opening
             else:
                 assistant_reply = "Job title and background cannot be empty."
                 print(f"\nJob Application Helper: {assistant_reply}")
                 
-            # --- REVIEWER FIX: Append exact user input and actual assistant reply ---
-            messages.append({"role": "user", "content": user_input})
+            # Append the assistant's reply to history
             messages.append({"role": "assistant", "content": assistant_reply})
 
         # 7. Otherwise, handle it as a regular chat turn
