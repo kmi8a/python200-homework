@@ -278,14 +278,13 @@ def run_chatbot():
 if __name__ == "__main__":
     run_chatbot()
 
-# I choose to use Option A - Comment block
+# I choose to use Option A
 
 # What could go wrong if a job-seeker submitted the bot's output directly — without reviewing it — to a real employer?
 # While the output of the chatbot looks very polished and impressive, the details on it can be inflated, 
 # some metrics are straight up invented, and experiences that sound plausible are entirely fabricated. 
 # Because these don't reflect the applicant's actual day-to-day experience, this will certainly raise 
 # some red flags for hiring managers familiar with the specific role.
-#
 # What is one guardrail you would add if you were deploying this tool professionally?
 # I would definitely add a UI warning or disclaimer reminding the user to review and edit the output 
 # of the chatbot before submitting it to any prospective employer. Another UI guardrail that could be 
