@@ -133,9 +133,10 @@ for c in c_values:
     model.fit(X_train_scaled, y_train)
 
     # In scikit-learn 1.1+, coef_ was deprecated and removed from OneVsRestClassifier, which requires extracting coefficients via model.estimators_ on newer local environments
-    total_magnitude = sum(np.abs(est.coef_).sum() for est in model.estimators_)
+    # total_magnitude = sum(np.abs(est.coef_).sum() for est in model.estimators_)
     
-    print(f"C: {c}, Total Coefficient Magnitude: {total_magnitude:.4f}")
+    # print(f"C: {c}, Total Coefficient Magnitude: {total_magnitude:.4f}")
+    print(f"C: {c}, Total Coefficient Magnitude: {np.abs(model.coef_).sum():.4f}")
 
 # As C increases, the total magnitude of the coefficients increases. This shows the effect of regularization: smaller values of C apply
 # stronger regularization, which shrinks the weights more, while larger values of C weaken regularization and allow larger coefficients. 
