@@ -157,10 +157,10 @@ def run_agent(user_prompt: str) -> str:
     return first_message.content or ''
 
 # Will calling run_agent("Convert 100 degrees Celsius to Fahrenheit") trigger a tool call? Why or why not?
-# I dont think the agent will need to use any tool for this task.
+# No, it probably will not trigger a tool call. The only tool available in run_agent is get_current_time, which is unrelated to temperature conversion. Since the model can solve this with its own reasoning, it should answer directly without using a tool.
 
 # How many API calls will be made to answer this query?
-# If no tools are needed, then i believe only one call to the API will be made.
+# If no tool is needed, only one API call will be made. If a tool were used, then there would be two API calls: one to decide on the tool call and one to generate the final response after the tool result is returned.
 
 answer_with_agent = run_agent('Convert 100 degrees Celsius to Fahrenheit')
 print(f'Question 2 answer: {answer_with_agent}')

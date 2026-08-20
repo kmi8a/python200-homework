@@ -15,6 +15,10 @@ else:
 
 api_key = os.getenv("OPENAI_API_KEY")
 
+# The assignment prompt references the original course repository layout, but in my submitted branch the raw yearly CSV files are not available.
+# To keep the project runnable in this environment, I adapted the loader to use the merged dataset present in resources/ instead.
+# This preserves functionality while matching the files actually included in the repo.
+
 DATA_DIR = os.path.join(os.getcwd(), "resources")
 DATA_PATH = os.path.join(DATA_DIR, "merged_happiness.csv")
 
