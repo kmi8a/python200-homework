@@ -125,7 +125,7 @@ for c in c_values:
     )
     model.fit(X_train_scaled, y_train)
 
-    # Manually assign model.coef_ so np.abs(model.coef_).sum() works in newer scikit-learn versions
+    # Attach coef_ to the wrapper so model.coef_ exists for np.abs(model.coef_).sum()
     model.coef_ = np.vstack([est.coef_ for est in model.estimators_])
     
     print(f"C = {c}")
@@ -212,8 +212,9 @@ fig, axes = plt.subplots(len(n_values) + 1, n_samples, figsize=(10, 2 * (len(n_v
 for j in range(n_samples):
     axes[0, j].imshow(images[j], cmap="gray_r")
     axes[0, j].axis("off")
-    if j == 0:
-        axes[0, j].set_title("Original")
+
+# Use ylabel for clear row labeling on the leftmost column
+axes[0, 0].set_ylabel("Original", fontsize=10, rotation=0, labelpad=50, va="center")
 
 # Reconstructions for different n values
 for row_idx, n_comp in enumerate(n_values, start=1):
@@ -221,8 +222,9 @@ for row_idx, n_comp in enumerate(n_values, start=1):
         recon = reconstruct_digit(j, scores, pca, n_comp)
         axes[row_idx, j].imshow(recon, cmap="gray_r")
         axes[row_idx, j].axis("off")
-        if j == 0:
-            axes[row_idx, j].set_title(f"n={n_comp}")
+    # Set the row label on the first column of each component tier
+    axes[row_idx, 0].set_ylabel(f"n = {n_comp}", fontsize=10, rotation=0, labelpad=50, va="center")
+
 
 plt.tight_layout()
 plt.savefig(OUTPUT / "pca_reconstructions.png", bbox_inches="tight")
