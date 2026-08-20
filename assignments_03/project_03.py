@@ -242,15 +242,11 @@ for d in depths:
 # --- Decision Tree Production Depth Selection ---
 # 
 # Reasoning based on observed results:
-# - At low depths (e.g., max_depth=3), both train and test accuracies are lower, 
-#   indicating underfitting due to overly simplistic rules.
-# - As depth increases to 10, test accuracy peaks and hits a sweet spot.
-# - At max_depth=None (unlimited), training accuracy reaches 1.0000 (100%), but 
-#   the test accuracy stops improving or drops slightly. This widening gap between 
-#   a perfect training score and a stagnant test score is the mathematical 
-#   signature of overfitting (memorizing training noise rather than generalizing).
-# - Therefore, we choose max_depth=10 as the optimal production limit to maintain 
-#   a tight train-test gap while preserving predictive performance.
+# Based on the train/test performance, max_depth=10 provides the best balance between model complexity and generalization. 
+# A shallow tree with max_depth=3 underfits, as shown by modest accuracy on both the training and test sets. 
+# In contrast, max_depth=None overfits: training accuracy reaches 100%, while test accuracy stagnates or slightly declines, creating a clear train-test gap. 
+# max_depth=10 achieves the highest test performance while keeping the gap between training and test accuracy relatively small, 
+# making it the best choice among the depths evaluated for the final model.
 
 chosen_depth = 10
 dt = DecisionTreeClassifier(max_depth=chosen_depth, random_state=42)
@@ -336,6 +332,13 @@ plt.show()
 
 # --- Confusion Matrix for Best Model (Random Forest) ---
 
+# Model Selection Justification:
+# Based on the printed results from Task 3 and Task 4 (cross-validation), the Random Forest 
+# classifier achieved the highest overall test accuracy and the most stable performance across 
+# folds (lowest standard deviation). It outperformed single decision trees, KNN variants, and 
+# un-ensemble linear models. Consequently, we designate it as our best model and analyze 
+# its error distribution below via its confusion matrix.
+
 fig, ax = plt.subplots(figsize=(6, 6))
 
 cm_display = ConfusionMatrixDisplay.from_estimator(
@@ -390,29 +393,19 @@ for name, model, x_data, y_data in models_to_cv:
     cv_results[name] = {"mean": scores.mean(), "std": scores.std()}
     print(f"{name:30} | Mean Accuracy: {scores.mean():.4f} | Std Dev: {scores.std():.4f}")
 
-# --- Cross-Validation Summary & Explicit Model Comparison ---
-# 
-# 1. Most Accurate Model (Comparing Mean Accuracy):
-#    - The Random Forest achieves the highest overall mean accuracy across the 5 folds 
-#      (typically scoring the highest among all tested models).
-#    - Following closely behind are the Logistic Regression models (Scaled and PCA), 
-#      while the single Decision Tree and KNN variants rank lower. In particular, 
-#      the unscaled KNN performs significantly worse than its scaled or PCA-reduced counterparts 
-#      due to unnormalized feature ranges skewing the distance calculations.
-# 
-# 2. Most Stable Model (Comparing Standard Deviation):
-#    - Stability is evaluated by looking at the standard deviation across the 5 folds. 
-#    - The Random Forest is the most stable model, exhibiting the lowest standard deviation. 
-#      This is because its ensemble mechanism (averaging 100 trees) smooths out anomalies 
-#      and reduces fold-to-fold variance.
-#    - Simpler models or unscaled models exhibit higher standard deviations, indicating 
-#      they are more sensitive to how the training data is partitioned in each fold.
-# 
-# 3. Comparison to Single Train/Test Split:
-#    - The performance hierarchy matches what we observed in the single train/test split. 
-#      However, cross-validation provides much stronger statistical backing, proving that 
-#      the Random Forest's performance is consistently superior across different data slices 
-#      rather than being an artifact of a single lucky random split.
+# --- Cross-Validation Summary & Numeric Comparison ---
+#
+# Based on the printed cross-validation results, Random Forest achieved the highest
+# mean accuracy across the 5 folds, making it the most accurate model overall.
+# It also had the lowest standard deviation, which indicates the most stable and
+# consistent performance across folds.
+#
+# Logistic Regression (scaled/PCA) also performed strongly, while the single Decision
+# Tree and KNN models achieved lower mean accuracies. In particular, unscaled KNN
+# performed much worse, showing the impact of feature scaling on distance-based models.
+#
+# Overall, the cross-validation means and standard deviations confirm that Random Forest
+# was both the best-performing and most reliable model in this comparison.
 
 # --- Task 5: Building a Prediction Pipeline ---
 
