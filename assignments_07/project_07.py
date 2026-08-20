@@ -166,31 +166,30 @@ def get_top_n_countries(column: str, year: int, n: int = 5) -> list | dict:
     except Exception as e:
         return {"error": str(e)}
 
+if __name__ == "__main__":
 
 # Task 2: Build the Agent
 
-model = OpenAIServerModel(api_key=api_key, model_id="gpt-4o-mini")
+    model = OpenAIServerModel(api_key=api_key, model_id="gpt-4o-mini")
 
-SYSTEM_PROMPT = """
-- You are a data analyst assistant for the World Happiness dataset.
-- Use the available tools for loading data, summarizing columns, computing correlations, and ranking countries.
-- CRITICAL: `load_happiness_data()` returns a metadata dictionary with 'shape' and 'columns'. When you write custom Python code that requires direct pandas operations, 
-  load the dataset locally inside your code block using `df = pd.read_csv(DATA_PATH)` or `pd.read_csv("resources/merged_happiness.csv")` since the agent's execution 
-  sandbox runs in an isolated scope.
-- PLOTTING RULE: When creating multi-category charts, use a wide figure size (e.g., `figsize=(14, 7)`), place the legend outside using `plt.legend(title='Region', bbox_to_anchor=(1.02, 1), loc='upper left')`, and add `plt.subplots_adjust(right=0.75)` before saving to prevent the chart area from looking squished.
-- ALWAYS save generated plots using `plt.savefig(output_dir + 'filename.png')` instead of using `plt.show()`, since this runs in a headless environment.
-- Be concise and student-friendly in your responses.
-"""
+    SYSTEM_PROMPT = """
+    - You are a data analyst assistant for the World Happiness dataset.
+    - Use the available tools for loading data, summarizing columns, computing correlations, and ranking countries.
+    - CRITICAL: `load_happiness_data()` returns a metadata dictionary with 'shape' and 'columns'. When you write custom Python code that requires direct pandas operations, 
+    load the dataset locally inside your code block using `df = pd.read_csv(DATA_PATH)` or `pd.read_csv("resources/merged_happiness.csv")` since the agent's execution 
+    sandbox runs in an isolated scope.
+    - PLOTTING RULE: When creating multi-category charts, use a wide figure size (e.g., `figsize=(14, 7)`), place the legend outside using `plt.legend(title='Region', bbox_to_anchor=(1.02, 1), loc='upper left')`, and add `plt.subplots_adjust(right=0.75)` before saving to prevent the chart area from looking squished.
+    - ALWAYS save generated plots using `plt.savefig(output_dir + 'filename.png')` instead of using `plt.show()`, since this runs in a headless environment.
+    - Be concise and student-friendly in your responses.
+    """
 
-agent = CodeAgent(
-    tools=[load_happiness_data, summarize_column, compute_correlation, get_top_n_countries],
-    model=model,
-    instructions=SYSTEM_PROMPT,
-    additional_authorized_imports=["pandas", "matplotlib.pyplot", "numpy", "scipy.stats", "os"],
-    max_steps=8,
-)
-
-if __name__ == "__main__":
+    agent = CodeAgent(
+        tools=[load_happiness_data, summarize_column, compute_correlation, get_top_n_countries],
+        model=model,
+        instructions=SYSTEM_PROMPT,
+        additional_authorized_imports=["pandas", "matplotlib.pyplot", "numpy", "scipy.stats", "os"],
+        max_steps=8,
+    )
 
 # Task 3: Run Guided Queries
 
