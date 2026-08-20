@@ -156,6 +156,7 @@ def run_agent(user_prompt: str) -> str:
     # If there were no tool calls, the first response was already the final answer
     return first_message.content or ''
 
+# --- Q2 Predictions ---
 # Will calling run_agent("Convert 100 degrees Celsius to Fahrenheit") trigger a tool call? Why or why not?
 # No, it probably will not trigger a tool call. The only tool available in run_agent is get_current_time, which is unrelated to temperature conversion. Since the model can solve this with its own reasoning, it should answer directly without using a tool.
 
@@ -168,6 +169,18 @@ print(f'Question 2 answer: {answer_with_agent}')
 # Q3
 
 tools = [
+    {
+        'type': 'function',
+        'function': {
+            'name': 'get_current_time',
+            'description': 'Returns the current local time as a string.',
+            'parameters': {
+                'type': 'object',
+                'properties': {},
+                'required': [],
+            },
+        },
+    },
     {
         'type': 'function',
         'function': {
@@ -188,31 +201,27 @@ tools = [
 ]
 
 
-def extended_run_agent(user_prompt: str) -> str:
-    '''Run a minimal ReAct-style agent for a single user prompt.'''
+def run_agent(user_prompt: str) -> str:
+    '''Run a minimal ReAct-style agent supporting multiple tools.'''
 
-    SYSTEM_PROMPT = '''You are a simple assistant that can convert temperatures from celsius to farenheit.
-                     Use the tool celsius_to_fahrenheit whenever a user asks to convert celsius to farenheit.'''
+    SYSTEM_PROMPT = '''You are a helpful assistant that can check the time and convert temperatures.
+    Use get_current_time for time queries and celsius_to_fahrenheit for temperature conversions.'''
     
-    # Step 1: start the conversation with system and user messages
     messages = [
         {'role': 'system', 'content': SYSTEM_PROMPT},
         {'role': 'user', 'content': user_prompt},
     ]
 
-    # Step 2: first API call - the model decides whether to call a tool
     first_response = client.chat.completions.create(
-        model='gpt-4.1-mini',
+        model='gpt-4o-mini',
         messages=messages,
         tools=tools,
-        tool_choice='auto',  # model chooses whether to use a tool
+        tool_choice='auto', 
     )
 
     print("First response received from model...")
-    print(first_response)
     first_message = first_response.choices[0].message
 
-    # Record what the model said so far
     messages.append(
         {
             'role': 'assistant',
@@ -221,25 +230,22 @@ def extended_run_agent(user_prompt: str) -> str:
         }
     )
 
-    # Step 3: check if the model requested any tools
     if first_message.tool_calls:
         print("Agentic mode engaged...")
         for tool_call in first_message.tool_calls:
             function_name = tool_call.function.name
 
-            if function_name == 'celsius_to_fahrenheit':
-                # Parse arguments from the model's tool call
+            if function_name == 'get_current_time':
+                tool_result = get_current_time()
+            elif function_name == 'celsius_to_fahrenheit':
                 args = json.loads(tool_call.function.arguments)
-                # Pass the argument(s) to the function
                 tool_result = celsius_to_fahrenheit(celsius=args.get("celsius"))
             else:
                 tool_result = f'Error: unknown tool {function_name}.'
 
-            # Print for debugging so we can see what happened
             print('Tool called:', function_name)
             print('Tool result:', tool_result)
 
-            # Step 3b: append the tool output so the model can see it
             messages.append(
                 {
                     'role': 'tool',
@@ -249,31 +255,27 @@ def extended_run_agent(user_prompt: str) -> str:
                 }
             )
 
-        # Step 4: second API call - model sees the tool result and gives final answer
         second_response = client.chat.completions.create(
-            model='gpt-4.1-mini',
+            model='gpt-4o-mini',
             messages=messages,
         )
         print("Second response received from model...")
-        print(second_response)
-
         final_message = second_response.choices[0].message
         return final_message.content or ''
     else:
         print("No tools needed....")
 
-    # If there were no tool calls, the first response was already the final answer
     return first_message.content or ''
 
-response_a = extended_run_agent("What is 37 degrees Celsius in Fahrenheit?")
+response_a = run_agent("What is 37 degrees Celsius in Fahrenheit?")
 print(f"Question 3 - Response A: {response_a}\n")
 
-# On this case a tool was called because the model required it for answering the question.
+# A tool was called (celsius_to_fahrenheit) because the query directly requests a temperature conversion matching the schema definition and system prompt instructions.
 
-response_b = extended_run_agent("What is the boiling point of water in plain English?")
+response_b = run_agent("What is the boiling point of water in plain English?")
 print(f"Question 3 - Response B: {response_b}\n")
 
-# On this case no tool was called because the reasoning of the model was enought o answer the question.
+# No tool was called because asking for the boiling point "in plain English" is a general conceptual fact that the model can answer directly from its internal knowledge base.
 
 # --- Lesson 03: Multi-Tool Agent ---
 
