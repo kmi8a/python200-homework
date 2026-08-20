@@ -60,7 +60,14 @@ y_pred_scaled = knn_scaled.predict(X_test_scaled)
 
 print(f"Accuracy Score: {accuracy_score(y_test, y_pred_scaled):.4f}")
 
-# Scaling makes no difference in accuracy here as all four features are measured in the same units and have comparable scales.
+# --- KNN Q2 Explanation ---
+# Scaling makes no difference in accuracy here because all four features in the Iris dataset 
+# (sepal length/width and petal length/width) are measured in the same unit (centimeters) 
+# and reside on very similar numerical ranges (roughly between 0 and 8 cm). 
+# Because KNN relies on Euclidean distance, features with larger magnitudes typically dominate 
+# distance calculations if left unscaled. However, since the Iris features naturally share 
+# comparable scales, neither feature set artificially drowns out the others, resulting 
+# in identical accuracy whether the data is scaled or unscaled.
 
 # Q3
 
@@ -191,7 +198,13 @@ ax.legend()
 plt.savefig(OUTPUT / "pca_variance_explained.png", bbox_inches='tight')
 plt.close()
 
-# You need approximately 13 components to explain 80% of the variance in the digits dataset.
+# --- PCA Q3 Explanation ---
+# By inspecting the cumulative explained variance curve where it intersects the red 
+# dashed 80% threshold line (`y = 0.80`), we can determine how many principal components 
+# are required to retain most of the dataset's information. Tracing this point on the 
+# plot shows that approximately 13 components are needed to explain 80% of the total 
+# variance in the 64-dimensional Digits dataset, allowing us to dramatically reduce 
+# dimensionality while preserving key structural information.
 
 # Q4
 

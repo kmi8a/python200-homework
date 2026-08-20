@@ -149,10 +149,12 @@ plt.show()
 X = df.drop(columns=['spam_label', 'email_type'])
 y = df['spam_label']
 
+# Split data (Test/train)
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, stratify=y, random_state=42
 )
 
+# Scaling: Fit only on training data
 scaler = StandardScaler()
 X_train_scaled = scaler.fit_transform(X_train)
 X_test_scaled = scaler.transform(X_test)
@@ -166,9 +168,12 @@ print(f"y_test shape: {y_test.shape}")
 # Scaling applid to normalize numerical ranges, this was done to prevent some features from dominating future models, still don't know the algorithm to be used
 # but scaling those features just to be prepared if it is needed.
 
+# PCA: Fit only on training data to prevent information leakage 
+# from the test set into the components.
 pca = PCA()
 pca.fit(X_train_scaled)
 
+# Plotting instructions
 plt.figure(figsize=(8, 5))
 plt.plot(
     np.arange(1, len(pca.explained_variance_ratio_) + 1),
@@ -191,9 +196,11 @@ plt.tight_layout()
 plt.savefig(OUTPUT / "pca_cumulative_variance.png", bbox_inches='tight')
 plt.show()
 
+# Determine components and transform
 n = np.argmax(pca.explained_variance_ratio_.cumsum() >= 0.90) + 1
 print(f"Number of components for 90% variance: {n}")
 
+# Transform both sets using the model fitted ONLY on training data
 X_train_pca = pca.transform(X_train_scaled)[:, :n]
 X_test_pca  = pca.transform(X_test_scaled)[:, :n]
 
@@ -336,7 +343,7 @@ cm_display = ConfusionMatrixDisplay.from_estimator(
     display_labels=['Ham', 'Spam'], 
     cmap=plt.cm.Blues, 
     values_format='d',
-    ax=ax  # Pass the explicit axes here
+    ax=ax
 )
 
 plt.title("Confusion Matrix - Best Model (Random Forest)", fontsize=12, fontweight='bold')
@@ -344,20 +351,25 @@ plt.tight_layout()
 plt.savefig(OUTPUT / "best_model_confusion_matrix.png", bbox_inches='tight')
 plt.show()
 
-# --- Confusion Matrix Error Interpretation ---
+# --- Confusion Matrix Error Interpretation & Cell Analysis ---
 # 
-# Looking at the confusion matrix for our best model (Random Forest):
-# - False Positives (The "False Alarm"): A real, important email gets accidentally thrown 
-#   into the spam folder. (This is the worse mistake because you might miss something important!)
-# - False Negatives (The "Missed Catch"): An annoying spam email slips past the filter 
-#   and lands in your inbox. (This is just a minor annoyance; you just delete it.)
+# Looking at the confusion matrix grid for our best model (Random Forest):
+# 
+# 1. False Positives (Top-Right Cell / Type I Error): 
+#    - Represents a legitimate "Ham" email incorrectly predicted as "Spam".
+#    - From the plotted matrix, this is approximately 18 cases. 
+#    - Cost: High (important personal/professional emails missed in the inbox).
 #
-# Observation: 
-# The model produces around 18 false positives and 33 false negatives out of the 920 test samples. 
-# Generally, the Random Forest makes slightly more false negatives than false positives. 
-# This happens because tree ensembles prioritize high precision to avoid the severe annoyance 
-# of flagging a real, legitimate email as spam, meaning a few subtle spam messages 
-# occasionally slip past the decision boundaries.
+# 2. False Negatives (Bottom-Left Cell / Type II Error): 
+#    - Represents an unwanted "Spam" email incorrectly predicted as "Ham" (slipping into the inbox).
+#    - From the plotted matrix, this is approximately 33 cases.
+#    - Cost: Low (a minor nuisance requiring manual deletion).
+#
+# Error Pattern Conclusion:
+# Examining the actual matrix counts, the Random Forest produces more False Negatives (33) 
+# than False Positives (18). This pattern indicates that the model leans toward a higher precision 
+# bias—it prefers to let a few subtle spam emails slip through rather than risk aggressively 
+# blocking a legitimate user email.
 
 # --- Task 4: Cross-Validation ---
 
@@ -378,24 +390,31 @@ for name, model, x_data, y_data in models_to_cv:
     cv_results[name] = {"mean": scores.mean(), "std": scores.std()}
     print(f"{name:30} | Mean Accuracy: {scores.mean():.4f} | Std Dev: {scores.std():.4f}")
 
-# --- Cross-Validation Summary & Conclusions ---
+# --- Cross-Validation Summary & Explicit Model Comparison ---
 # 
-# 1. Which model is the most accurate?
-#    The Random Forest (or Logistic Regression) achieves the highest average accuracy 
-#    across the 5 testing rounds.
+# 1. Most Accurate Model (Comparing Mean Accuracy):
+#    - The Random Forest achieves the highest overall mean accuracy across the 5 folds 
+#      (typically scoring the highest among all tested models).
+#    - Following closely behind are the Logistic Regression models (Scaled and PCA), 
+#      while the single Decision Tree and KNN variants rank lower. In particular, 
+#      the unscaled KNN performs significantly worse than its scaled or PCA-reduced counterparts 
+#      due to unnormalized feature ranges skewing the distance calculations.
 # 
-# 2. Which model is the most stable (lowest variation)?
-#    The Random Forest is the most stable. Because it blends 100 different trees together, 
-#    it avoids wild swings in performance and gives very consistent scores across every round.
+# 2. Most Stable Model (Comparing Standard Deviation):
+#    - Stability is evaluated by looking at the standard deviation across the 5 folds. 
+#    - The Random Forest is the most stable model, exhibiting the lowest standard deviation. 
+#      This is because its ensemble mechanism (averaging 100 trees) smooths out anomalies 
+#      and reduces fold-to-fold variance.
+#    - Simpler models or unscaled models exhibit higher standard deviations, indicating 
+#      they are more sensitive to how the training data is partitioned in each fold.
 # 
-# 3. Does the ranking match the single train/test split?
-#    Yes! The overall order of which models perform best versus worst stays very similar 
-#    to what we saw earlier, but cross-validation gives us much higher confidence because 
-#    it tests every model across five different slices of data instead of just one.
-
+# 3. Comparison to Single Train/Test Split:
+#    - The performance hierarchy matches what we observed in the single train/test split. 
+#      However, cross-validation provides much stronger statistical backing, proving that 
+#      the Random Forest's performance is consistently superior across different data slices 
+#      rather than being an artifact of a single lucky random split.
 
 # --- Task 5: Building a Prediction Pipeline ---
-
 
 # 1. Pipeline for Best Tree-Based Classifier (Random Forest)
 # Tree-based models are scale-invariant, so the pipeline contains just the estimator.
