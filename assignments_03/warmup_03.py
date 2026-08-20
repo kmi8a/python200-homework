@@ -199,11 +199,7 @@ plt.savefig(OUTPUT / "pca_variance_explained.png", bbox_inches='tight')
 plt.close()
 
 # --- PCA Q3 Explanation ---
-# By inspecting the cumulative explained variance curve where it intersects the red 
-# dashed 80% threshold line (`y = 0.80`), we can determine how many principal components 
-# are required. Tracing this point on the plot shows that 13 components are needed to explain 80% of the total 
-# variance in the 64-dimensional Digits dataset, allowing us to dramatically reduce 
-# dimensionality while preserving key structural information.
+# Approximately 13 components are needed to explain 80% of the variance.
 
 # Q4
 

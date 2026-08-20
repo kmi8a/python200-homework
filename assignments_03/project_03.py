@@ -421,9 +421,9 @@ print("--- Pipeline: Random Forest ---")
 print(f"Accuracy: {rf_pipeline.score(X_test, y_test):.4f}")
 print(classification_report(y_test, y_pred_rf_pipe))
 
-# 2. Pipeline for Best Non-Tree-Based Classifier (Logistic Regression with Scaling)
-# Logistic Regression requires feature scaling for optimal optimization and regularization, 
-# so we chain a StandardScaler step directly into the pipeline.
+# 2. PCA was evaluated during Task 3, but it did not improve the performance of Logistic Regression relative to the scaled feature set. 
+# As a result, the final non-tree pipeline includes standardization only, which matches the best-performing configuration identified earlier.
+
 logreg_pipeline = Pipeline([
     ("scaler", StandardScaler()),
     ("classifier", LogisticRegression(C=1.0, max_iter=1000, solver='liblinear'))
