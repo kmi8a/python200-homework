@@ -153,11 +153,14 @@ images   = digits.images  # same data shaped as 8x8 images for plotting
 print(f"X_digits shape: {X_digits.shape}")
 print(f"images shape: {images.shape}")
 
-fig, axes = plt.subplots(1, 10, figsize=(12, 2))
+fig, axes = plt.subplots(1, 10, figsize=(12, 2.5))
+
+fig.suptitle("Sample Digits (0 to 9) from the Digits Dataset", fontsize=12, fontweight="bold", y=1.05)
+
 for i in range(10):
     idx = np.where(y_digits == i)[0][0]
     axes[i].imshow(images[idx], cmap="gray_r")
-    axes[i].set_title(str(i))
+    axes[i].set_title(str(i), fontsize=10)
     axes[i].axis("off")
 
 plt.tight_layout()
@@ -213,35 +216,40 @@ def reconstruct_digit(sample_idx, scores, pca, n_components):
 n_values = [2, 5, 15, 40]
 n_samples = 5
 
-fig, axes = plt.subplots(len(n_values) + 1, n_samples, figsize=(10, 2 * (len(n_values) + 1)))
+fig, axes = plt.subplots(len(n_values) + 1, n_samples, figsize=(11, 2 * (len(n_values) + 1)))
 
 row_labels = ["Original"] + [f"n = {n}" for n in n_values]
 
-# Original images row
+# Plot original images row
 for j in range(n_samples):
-  axes[0, j].imshow(images[j], cmap="gray_r")
-  axes[0, j].axis("off")
+    axes[0, j].imshow(images[j], cmap="gray_r")
 
-# Reconstructions for different n values
+# Plot reconstructions for different n values
 for row_idx, n_comp in enumerate(n_values, start=1):
-  for j in range(n_samples):
-    recon = reconstruct_digit(j, scores, pca, n_comp)
-    axes[row_idx, j].imshow(recon, cmap="gray_r")
-    axes[row_idx, j].axis("off")
+    for j in range(n_samples):
+        recon = reconstruct_digit(j, scores, pca, n_comp)
+        axes[row_idx, j].imshow(recon, cmap="gray_r")
 
-# Add clean row labels on the left of each row
+# Clean up axes (hide ticks and spines cleanly so set_ylabel works)
+for row_idx in range(len(row_labels)):
+    for j in range(n_samples):
+        ax = axes[row_idx, j]
+        ax.set_xticks([])
+        ax.set_yticks([])
+        for spine in ax.spines.values():
+            spine.set_visible(False)
+
+# Add explicit, native row labels using set_ylabel on the first column
 for row_idx, label in enumerate(row_labels):
-  # Position text relative to the first subplot of each row
-  axes[row_idx, 0].text(
-      -0.3,
-      0.5,
-      label,
-      transform=axes[row_idx, 0].transAxes,
-      fontsize=11,
-      fontweight="bold",
-      va="center",
-      ha="right",
-  )
+    axes[row_idx, 0].set_ylabel(
+        label,
+        rotation=0,
+        ha="right",
+        va="center",
+        fontsize=11,
+        fontweight="bold",
+        labelpad=15
+    )
 
 plt.tight_layout()
 plt.savefig(OUTPUT / "pca_reconstructions.png", bbox_inches="tight")
