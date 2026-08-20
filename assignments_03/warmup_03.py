@@ -125,11 +125,10 @@ for c in c_values:
     )
     model.fit(X_train_scaled, y_train)
 
-    # Attach coef_ to the wrapper so model.coef_ exists for np.abs(model.coef_).sum()
-    model.coef_ = np.vstack([est.coef_ for est in model.estimators_])
+    # In scikit-learn 1.1+, coef_ was deprecated and removed from OneVsRestClassifier, which requires extracting coefficients via model.estimators_ on newer local environments
+    total_magnitude = sum(np.abs(est.coef_).sum() for est in model.estimators_)
     
-    print(f"C = {c}")
-    print(f"Total Coefficient Magnitude: {np.abs(model.coef_).sum():.4f}\n")
+    print(f"C: {c}, Total Coefficient Magnitude: {total_magnitude:.4f}")
 
 # As C increases, the total magnitude of the coefficients increases. This shows the effect of regularization: smaller values of C apply
 # stronger regularization, which shrinks the weights more, while larger values of C weaken regularization and allow larger coefficients. 
@@ -208,23 +207,33 @@ n_samples = 5
 
 fig, axes = plt.subplots(len(n_values) + 1, n_samples, figsize=(10, 2 * (len(n_values) + 1)))
 
-# Original images
-for j in range(n_samples):
-    axes[0, j].imshow(images[j], cmap="gray_r")
-    axes[0, j].axis("off")
+row_labels = ["Original"] + [f"n = {n} " for n in n_values]
 
-# Use ylabel for clear row labeling on the leftmost column
-axes[0, 0].set_ylabel("Original", fontsize=10, rotation=0, labelpad=50, va="center")
+# Original images row
+for j in range(n_samples):
+  axes[0, j].imshow(images[j], cmap="gray_r")
+  axes[0, j].axis("off")
 
 # Reconstructions for different n values
 for row_idx, n_comp in enumerate(n_values, start=1):
-    for j in range(n_samples):
-        recon = reconstruct_digit(j, scores, pca, n_comp)
-        axes[row_idx, j].imshow(recon, cmap="gray_r")
-        axes[row_idx, j].axis("off")
-    # Set the row label on the first column of each component tier
-    axes[row_idx, 0].set_ylabel(f"n = {n_comp}", fontsize=10, rotation=0, labelpad=50, va="center")
+  for j in range(n_samples):
+    recon = reconstruct_digit(j, scores, pca, n_comp)
+    axes[row_idx, j].imshow(recon, cmap="gray_r")
+    axes[row_idx, j].axis("off")
 
+# Add clean row labels on the left of each row
+for row_idx, label in enumerate(row_labels):
+  # Position text relative to the first subplot of each row
+  axes[row_idx, 0].text(
+      -0.3,
+      0.5,
+      label,
+      transform=axes[row_idx, 0].transAxes,
+      fontsize=11,
+      fontweight="bold",
+      va="center",
+      ha="right",
+  )
 
 plt.tight_layout()
 plt.savefig(OUTPUT / "pca_reconstructions.png", bbox_inches="tight")
