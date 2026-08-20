@@ -89,7 +89,7 @@ for k in k_values:
     cv_scores = cross_val_score(KNeighborsClassifier(n_neighbors=k), X_train, y_train, cv=5)
     print(f"k={k}: Mean CV Score = {cv_scores.mean():.4f}")
 
-# I would choose k5 or k7 as they have the more balance between high cross-validation performance and stable generalization.
+# both k5 and k7 had a CV score of 0.9750, I would either one because they are the more balance dbetween high cross-validation performance and stable generalization.
 
 # --- Classifier Evaluation ---
 # Q1

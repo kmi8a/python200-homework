@@ -232,12 +232,21 @@ print(classification_report(y_test, y_pred_knn_pca))
 
 # 3. DecisionTreeClassifier (Hyperparameter Tuning for Max Depth)
 depths = [3, 5, 10, None]
+
+print("--- Decision Tree Depth Exploration ---")
+print(f"{'Max Depth':<12} | {'Train Accuracy':<15} | {'Test Accuracy':<15}")
+print("-" * 48)
+
 for d in depths:
     dt_temp = DecisionTreeClassifier(max_depth=d, random_state=42)
     dt_temp.fit(X_train, y_train)
     train_acc = accuracy_score(y_train, dt_temp.predict(X_train))
     test_acc = accuracy_score(y_test, dt_temp.predict(X_test))
-    print(f"Decision Tree (max_depth={d}) -> Train Acc: {train_acc:.4f} | Test Acc: {test_acc:.4f}")
+    
+    d_label = str(d) if d is not None else "None"
+    print(f"{d_label:<12} | {train_acc:.4f}          | {test_acc:.4f}")
+
+print("-" * 48)
 
 # --- Decision Tree Production Depth Selection ---
 # 
@@ -252,9 +261,10 @@ chosen_depth = 10
 dt = DecisionTreeClassifier(max_depth=chosen_depth, random_state=42)
 dt.fit(X_train, y_train)
 y_pred_dt = dt.predict(X_test)
-print(f"--- Decision Tree (max_depth={chosen_depth}) ---")
+print(f"\n--- Decision Tree (max_depth={chosen_depth}) ---")
 print(f"Accuracy: {accuracy_score(y_test, y_pred_dt):.4f}")
 print(classification_report(y_test, y_pred_dt))
+
 
 # 4. RandomForestClassifier
 rf = RandomForestClassifier(n_estimators=100, random_state=42)
