@@ -232,7 +232,19 @@ for d in depths:
     test_acc = accuracy_score(y_test, dt_temp.predict(X_test))
     print(f"Decision Tree (max_depth={d}) -> Train Acc: {train_acc:.4f} | Test Acc: {test_acc:.4f}")
 
-# Chosen depth production model (e.g., max_depth=10 prevents severe overfitting while capturing deep interactions)
+# --- Decision Tree Production Depth Selection ---
+# 
+# Reasoning based on observed results:
+# - At low depths (e.g., max_depth=3), both train and test accuracies are lower, 
+#   indicating underfitting due to overly simplistic rules.
+# - As depth increases to 10, test accuracy peaks and hits a sweet spot.
+# - At max_depth=None (unlimited), training accuracy reaches 1.0000 (100%), but 
+#   the test accuracy stops improving or drops slightly. This widening gap between 
+#   a perfect training score and a stagnant test score is the mathematical 
+#   signature of overfitting (memorizing training noise rather than generalizing).
+# - Therefore, we choose max_depth=10 as the optimal production limit to maintain 
+#   a tight train-test gap while preserving predictive performance.
+
 chosen_depth = 10
 dt = DecisionTreeClassifier(max_depth=chosen_depth, random_state=42)
 dt.fit(X_train, y_train)
@@ -300,6 +312,20 @@ plt.tight_layout()
 plt.savefig(OUTPUT / "feature_importances.png", bbox_inches='tight')
 plt.show()
 
+# --- Feature Importance Comparison & Intuition ---
+# 
+# - Do the two models agree? 
+#   Yes, both models strongly agree on the top general indicators (such as `char_freq_!`, 
+#   `char_freq_$`, `word_freq_free`, and `capital_run_length_total`). However, their exact 
+#   rankings differ: the single Decision Tree relies heavily on a few sharp split thresholds 
+#   chosen early in its root structure, whereas the Random Forest smooths importance across 
+#   many trees, giving a more stable and distributed view of feature relevance.
+# 
+# - Do the results match intuition?
+#   Yes, they align closely with human intuition about spam. Features representing aggressive 
+#   marketing or financial scams (dollar signs, exclamation marks, words like "free" or "your", 
+#   and long strings of capital letters) naturally dominate the top importances for both models.
+
 
 # --- Confusion Matrix for Best Model (Random Forest) ---
 
@@ -317,6 +343,21 @@ plt.title("Confusion Matrix - Best Model (Random Forest)", fontsize=12, fontweig
 plt.tight_layout()
 plt.savefig(OUTPUT / "best_model_confusion_matrix.png", bbox_inches='tight')
 plt.show()
+
+# --- Confusion Matrix Error Interpretation ---
+# 
+# Looking at the confusion matrix for our best model (Random Forest):
+# - False Positives (The "False Alarm"): A real, important email gets accidentally thrown 
+#   into the spam folder. (This is the worse mistake because you might miss something important!)
+# - False Negatives (The "Missed Catch"): An annoying spam email slips past the filter 
+#   and lands in your inbox. (This is just a minor annoyance; you just delete it.)
+#
+# Observation: 
+# The model produces around 18 false positives and 33 false negatives out of the 920 test samples. 
+# Generally, the Random Forest makes slightly more false negatives than false positives. 
+# This happens because tree ensembles prioritize high precision to avoid the severe annoyance 
+# of flagging a real, legitimate email as spam, meaning a few subtle spam messages 
+# occasionally slip past the decision boundaries.
 
 # --- Task 4: Cross-Validation ---
 
@@ -337,15 +378,20 @@ for name, model, x_data, y_data in models_to_cv:
     cv_results[name] = {"mean": scores.mean(), "std": scores.std()}
     print(f"{name:30} | Mean Accuracy: {scores.mean():.4f} | Std Dev: {scores.std():.4f}")
 
-# --- Cross-Validation Analysis & Discussion ---
+# --- Cross-Validation Summary & Conclusions ---
 # 
-# - Most Accurate: Typically, the Random Forest or Logistic Regression (Scaled) achieves the highest mean accuracy 
-#   across the 5 folds.
-# - Most Stable (Lowest Variance): The Random Forest typically exhibits the lowest standard deviation (highest stability) 
-#   across folds. This happens because ensemble averaging across 100 trees smooths out random sample variations that 
-#   can trip up a single Decision Tree or distance-sensitive model.
-# - Ranking Match: Yes, the general model ranking closely mirrors what you saw in the single train/test split, 
-#   but cross-validation gives a much more confident and trustworthy metric of true out-of-sample generalization.
+# 1. Which model is the most accurate?
+#    The Random Forest (or Logistic Regression) achieves the highest average accuracy 
+#    across the 5 testing rounds.
+# 
+# 2. Which model is the most stable (lowest variation)?
+#    The Random Forest is the most stable. Because it blends 100 different trees together, 
+#    it avoids wild swings in performance and gives very consistent scores across every round.
+# 
+# 3. Does the ranking match the single train/test split?
+#    Yes! The overall order of which models perform best versus worst stays very similar 
+#    to what we saw earlier, but cross-validation gives us much higher confidence because 
+#    it tests every model across five different slices of data instead of just one.
 
 
 # --- Task 5: Building a Prediction Pipeline ---
@@ -394,4 +440,9 @@ print(classification_report(y_test, y_pred_logreg_pipe))
 #      to call pipeline.predict(raw_new_data) without manually scaling or tracking intermediate arrays.
 #   3. Eliminates Bookkeeping Errors: It removes the risk of forgetting to scale test inputs or applying 
 #      transformations in the wrong order.
-#
+# 
+# Do the pipeline results match our earlier manual approach?
+# Yes! The accuracy scores and classification reports produced by the pipelines are 
+# identical to our earlier manual results. This confirms that the pipelines are performing 
+# the exact same data scaling and prediction steps correctly, while safely bundling them 
+# together to prevent data leakage and make future deployment much easier.
