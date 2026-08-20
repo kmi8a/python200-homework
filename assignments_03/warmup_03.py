@@ -120,17 +120,20 @@ print(classification_report(y_test, y_pred_dt))
 c_values = [0.01, 1.0, 100]
 
 for c in c_values:
-    model = OneVsRestClassifier(LogisticRegression(C=c, solver="liblinear", random_state=42))
+    model = OneVsRestClassifier(
+        LogisticRegression(C=c, max_iter=1000, solver="liblinear", random_state=42)
+    )
     model.fit(X_train_scaled, y_train)
 
-    coef_magnitude = np.sum([np.sum(np.abs(est.coef_)) for est in model.estimators_])
-
+    # Manually assign model.coef_ so np.abs(model.coef_).sum() works in newer scikit-learn versions
+    model.coef_ = np.vstack([est.coef_ for est in model.estimators_])
+    
     print(f"C = {c}")
-    print(f"Accuracy: {model.score(X_test_scaled, y_test):.4f}")
-    print(f"Total Coefficient Magnitude: {coef_magnitude:.4f}\n")
+    print(f"Total Coefficient Magnitude: {np.abs(model.coef_).sum():.4f}\n")
 
-# As C increases, the total coefficient magnitude also increases.
-# regularization is shrinking big values.
+# As C increases, the total magnitude of the coefficients increases. This shows the effect of regularization: smaller values of C apply
+# stronger regularization, which shrinks the weights more, while larger values of C weaken regularization and allow larger coefficients. 
+# Therefore, C = 0.01 produces the smallest coefficients, and C = 100 produces the largest.
 
 # --- PCA ---
 
@@ -158,7 +161,8 @@ plt.close()
 # Q2
 
 pca = PCA()
-scores = pca.fit_transform(X_digits)
+pca.fit(X_digits)
+scores = pca.transform(X_digits)
 
 fig, ax = plt.subplots(figsize=(8, 6))
 scatter = ax.scatter(scores[:, 0], scores[:, 1], c=y_digits, cmap='tab10', s=10)
@@ -170,8 +174,8 @@ ax.set_title('PCA 2D Projection of Digits Dataset')
 plt.savefig(OUTPUT / "pca_2d_projection.png", bbox_inches='tight')
 plt.close()
 
-## Images of the same digit tend to form distinct clusters in this 2D space, some classes overlap due to
-## shrinking 64 dimensions to just 2.
+# Do same-digit images tend to cluster together in this 2D space?
+# Yes, images of the same digit tend to form distinct clusters, though some overlap occurs because we are compressing 64 dimensions down to just 2.
 
 # Q3
 
