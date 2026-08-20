@@ -168,7 +168,7 @@ def get_top_n_countries(column: str, year: int, n: int = 5) -> list | dict:
 
 if __name__ == "__main__":
 
-# Task 2: Build the Agent
+    # Task 2: Build the Agent
 
     model = OpenAIServerModel(api_key=api_key, model_id="gpt-4o-mini")
 
@@ -191,7 +191,7 @@ if __name__ == "__main__":
         max_steps=8,
     )
 
-# Task 3: Run Guided Queries
+    # Task 3: Run Guided Queries
 
     queries = [
         "Load the happiness data and tell me its shape and column names.",
@@ -210,7 +210,7 @@ if __name__ == "__main__":
             print(f"An error occurred during execution: {e}")
 
 
-# Task 4: Your Own Questions
+    # Task 4: Your Own Questions
 
     my_questions = [
         "What is the statistical correlation between social support and healthy life expectancy, and is it significant?",
