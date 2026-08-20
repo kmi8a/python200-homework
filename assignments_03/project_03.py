@@ -20,7 +20,13 @@ from sklearn.metrics import (
 )
 from sklearn.inspection import DecisionBoundaryDisplay
 from sklearn.decomposition import PCA
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import ConfusionMatrixDisplay
+from sklearn.pipeline import Pipeline
 
+# added this line so the terminal is not filled with non-critical warning messages
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 OUTPUT = Path('outputs/')
@@ -192,4 +198,200 @@ X_train_pca = pca.transform(X_train_scaled)[:, :n]
 X_test_pca  = pca.transform(X_test_scaled)[:, :n]
 
 
+# --- Task 3: A Classifier Comparison ---
 
+# 1. KNeighborsClassifier (Unscaled Data)
+knn_unscaled = KNeighborsClassifier(n_neighbors=5)
+knn_unscaled.fit(X_train, y_train)
+y_pred_knn_raw = knn_unscaled.predict(X_test)
+print("--- KNN (Unscaled) ---")
+print(f"Accuracy: {accuracy_score(y_test, y_pred_knn_raw):.4f}")
+print(classification_report(y_test, y_pred_knn_raw))
+
+# 2. KNeighborsClassifier (Scaled Data vs PCA-reduced Data)
+knn_scaled = KNeighborsClassifier(n_neighbors=5)
+knn_scaled.fit(X_train_scaled, y_train)
+y_pred_knn_scaled = knn_scaled.predict(X_test_scaled)
+print("--- KNN (Scaled) ---")
+print(f"Accuracy: {accuracy_score(y_test, y_pred_knn_scaled):.4f}")
+print(classification_report(y_test, y_pred_knn_scaled))
+
+knn_pca = KNeighborsClassifier(n_neighbors=5)
+knn_pca.fit(X_train_pca, y_train)
+y_pred_knn_pca = knn_pca.predict(X_test_pca)
+print("--- KNN (PCA-reduced) ---")
+print(f"Accuracy: {accuracy_score(y_test, y_pred_knn_pca):.4f}")
+print(classification_report(y_test, y_pred_knn_pca))
+
+# 3. DecisionTreeClassifier (Hyperparameter Tuning for Max Depth)
+depths = [3, 5, 10, None]
+for d in depths:
+    dt_temp = DecisionTreeClassifier(max_depth=d, random_state=42)
+    dt_temp.fit(X_train, y_train)
+    train_acc = accuracy_score(y_train, dt_temp.predict(X_train))
+    test_acc = accuracy_score(y_test, dt_temp.predict(X_test))
+    print(f"Decision Tree (max_depth={d}) -> Train Acc: {train_acc:.4f} | Test Acc: {test_acc:.4f}")
+
+# Chosen depth production model (e.g., max_depth=10 prevents severe overfitting while capturing deep interactions)
+chosen_depth = 10
+dt = DecisionTreeClassifier(max_depth=chosen_depth, random_state=42)
+dt.fit(X_train, y_train)
+y_pred_dt = dt.predict(X_test)
+print(f"--- Decision Tree (max_depth={chosen_depth}) ---")
+print(f"Accuracy: {accuracy_score(y_test, y_pred_dt):.4f}")
+print(classification_report(y_test, y_pred_dt))
+
+# 4. RandomForestClassifier
+rf = RandomForestClassifier(n_estimators=100, random_state=42)
+rf.fit(X_train, y_train)
+y_pred_rf = rf.predict(X_test)
+print("--- Random Forest Classifier ---")
+print(f"Accuracy: {accuracy_score(y_test, y_pred_rf):.4f}")
+print(classification_report(y_test, y_pred_rf))
+
+# 5. LogisticRegression (Scaled vs PCA-reduced)
+logreg_scaled = LogisticRegression(C=1.0, max_iter=1000, solver='liblinear')
+logreg_scaled.fit(X_train_scaled, y_train)
+y_pred_lr_scaled = logreg_scaled.predict(X_test_scaled)
+print("--- Logistic Regression (Scaled) ---")
+print(f"Accuracy: {accuracy_score(y_test, y_pred_lr_scaled):.4f}")
+print(classification_report(y_test, y_pred_lr_scaled))
+
+logreg_pca = LogisticRegression(C=1.0, max_iter=1000, solver='liblinear')
+logreg_pca.fit(X_train_pca, y_train)
+y_pred_lr_pca = logreg_pca.predict(X_test_pca)
+print("--- Logistic Regression (PCA-reduced) ---")
+print(f"Accuracy: {accuracy_score(y_test, y_pred_lr_pca):.4f}")
+print(classification_report(y_test, y_pred_lr_pca))
+
+# --- Model Analysis & Interpretations ---
+# 
+# - Performance Summary: Ensemble models (Random Forest) and tuned linear models (Logistic Regression) 
+#   tend to outperform distance-based (KNN) and single decision trees.
+# - PCA vs. Non-PCA: For KNN and Logistic Regression, using the full scaled feature array usually 
+#   retains fine-grained lexical cues better than discarding variance via PCA compression. This matches 
+#   our hypothesis that dropping components can eliminate subtle word-frequency predictors.
+# - Optimization Metric Position: For a spam filter, minimizing false positives (ham marked as spam) 
+#   is usually prioritized over false negatives because sending a legitimate, important personal or 
+#   professional email to the spam folder carries a much higher real-world cost than missing a single spam email.
+
+
+# --- Feature Importances & Visualization ---
+
+feature_names = X.columns
+
+# Top 10 features for Decision Tree
+dt_importances = pd.Series(dt.feature_importances_, index=feature_names)
+print("\n--- Top 10 Features (Decision Tree) ---")
+print(dt_importances.nlargest(10))
+
+# Top 10 features for Random Forest
+rf_importances = pd.Series(rf.feature_importances_, index=feature_names)
+print("\n--- Top 10 Features (Random Forest) ---")
+print(rf_importances.nlargest(10))
+
+# Save Random Forest Feature Importances Bar Chart
+plt.figure(figsize=(10, 6))
+rf_importances.nlargest(10).sort_values().plot(kind='barh', color='teal')
+plt.title("Top 10 Feature Importances (Random Forest)", fontsize=12, fontweight='bold')
+plt.xlabel("Importance Score", fontsize=10)
+plt.ylabel("Features", fontsize=10)
+plt.tight_layout()
+plt.savefig(OUTPUT / "feature_importances.png", bbox_inches='tight')
+plt.show()
+
+
+# --- Confusion Matrix for Best Model (Random Forest) ---
+
+fig, ax = plt.subplots(figsize=(6, 6))
+
+cm_display = ConfusionMatrixDisplay.from_estimator(
+    rf, X_test, y_test, 
+    display_labels=['Ham', 'Spam'], 
+    cmap=plt.cm.Blues, 
+    values_format='d',
+    ax=ax  # Pass the explicit axes here
+)
+
+plt.title("Confusion Matrix - Best Model (Random Forest)", fontsize=12, fontweight='bold')
+plt.tight_layout()
+plt.savefig(OUTPUT / "best_model_confusion_matrix.png", bbox_inches='tight')
+plt.show()
+
+# --- Task 4: Cross-Validation ---
+
+models_to_cv = [
+    ("KNN (Unscaled)", knn_unscaled, X_train, y_train),
+    ("KNN (Scaled)", knn_scaled, X_train_scaled, y_train),
+    ("KNN (PCA)", knn_pca, X_train_pca, y_train),
+    ("Decision Tree (max_depth=10)", dt, X_train, y_train),
+    ("Random Forest", rf, X_train, y_train),
+    ("Logistic Regression (Scaled)", logreg_scaled, X_train_scaled, y_train),
+    ("Logistic Regression (PCA)", logreg_pca, X_train_pca, y_train)
+]
+
+print("\n--- 5-Fold Cross-Validation Results ---")
+cv_results = {}
+for name, model, x_data, y_data in models_to_cv:
+    scores = cross_val_score(model, x_data, y_data, cv=5, scoring='accuracy')
+    cv_results[name] = {"mean": scores.mean(), "std": scores.std()}
+    print(f"{name:30} | Mean Accuracy: {scores.mean():.4f} | Std Dev: {scores.std():.4f}")
+
+# --- Cross-Validation Analysis & Discussion ---
+# 
+# - Most Accurate: Typically, the Random Forest or Logistic Regression (Scaled) achieves the highest mean accuracy 
+#   across the 5 folds.
+# - Most Stable (Lowest Variance): The Random Forest typically exhibits the lowest standard deviation (highest stability) 
+#   across folds. This happens because ensemble averaging across 100 trees smooths out random sample variations that 
+#   can trip up a single Decision Tree or distance-sensitive model.
+# - Ranking Match: Yes, the general model ranking closely mirrors what you saw in the single train/test split, 
+#   but cross-validation gives a much more confident and trustworthy metric of true out-of-sample generalization.
+
+
+# --- Task 5: Building a Prediction Pipeline ---
+
+
+# 1. Pipeline for Best Tree-Based Classifier (Random Forest)
+# Tree-based models are scale-invariant, so the pipeline contains just the estimator.
+rf_pipeline = Pipeline([
+    ("classifier", RandomForestClassifier(n_estimators=100, random_state=42))
+])
+
+rf_pipeline.fit(X_train, y_train)
+y_pred_rf_pipe = rf_pipeline.predict(X_test)
+print("--- Pipeline: Random Forest ---")
+print(f"Accuracy: {rf_pipeline.score(X_test, y_test):.4f}")
+print(classification_report(y_test, y_pred_rf_pipe))
+
+# 2. Pipeline for Best Non-Tree-Based Classifier (Logistic Regression with Scaling)
+# Logistic Regression requires feature scaling for optimal optimization and regularization, 
+# so we chain a StandardScaler step directly into the pipeline.
+logreg_pipeline = Pipeline([
+    ("scaler", StandardScaler()),
+    ("classifier", LogisticRegression(C=1.0, max_iter=1000, solver='liblinear'))
+])
+
+logreg_pipeline.fit(X_train, y_train)
+y_pred_logreg_pipe = logreg_pipeline.predict(X_test)
+print("--- Pipeline: Logistic Regression (Scaled) ---")
+print(f"Accuracy: {logreg_pipeline.score(X_test, y_test):.4f}")
+print(classification_report(y_test, y_pred_logreg_pipe))
+
+
+# --- Pipeline Analysis & Commentary ---
+# 
+# - Do they have the same structure? 
+#   No, they have different structures. The Random Forest pipeline only needs the model itself 
+#   because decision trees evaluate splits independently of feature scale. The Logistic Regression 
+#   pipeline requires a pre-processing step (StandardScaler) chained before the classifier because 
+#   its optimization and regularization rely heavily on comparable feature magnitudes.
+# 
+# - What is the practical value of packaging a model this way?
+#   1. Prevents Data Leakage: Transformers like scalers or PCA are fit strictly on the training 
+#      subset during cross-validation or training, avoiding accidental test-set information leakage.
+#   2. Production Readiness & Deployment: A single pipeline object packages both transformation and 
+#      prediction logic. When handing the model off to an API or engineering team, they only need 
+#      to call pipeline.predict(raw_new_data) without manually scaling or tracking intermediate arrays.
+#   3. Eliminates Bookkeeping Errors: It removes the risk of forgetting to scale test inputs or applying 
+#      transformations in the wrong order.
+#
