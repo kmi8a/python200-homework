@@ -72,6 +72,8 @@ With the use of these platforms you gain developer velocity, automated elasticit
 
 If your dataset fits comfortably on a single machine and you do not have massive compute demands.
 
+The learning curve for cloud infrastructure can be very steep. Even doing simple things in the cloud can take a long time, as you have to figure out the right resources and jargon initially.
+
 
 # Part 2: Warmup — Cloud Landscape
 
