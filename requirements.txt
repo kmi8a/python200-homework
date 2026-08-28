@@ -46,3 +46,6 @@ pgvector
 
 # --- AI Agents (Week 7) ---
 smolagents
+
+# --- Cloud_AI (Week 8) ---
+supabase
