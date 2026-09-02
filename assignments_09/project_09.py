@@ -13,7 +13,7 @@ supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 LATITUDE  = 35.23
 LONGITUDE = -80.84
 
-# --- Extract ---
+# Step 1: Extract
 
 url = "https://archive-api.open-meteo.com/v1/archive"
 params = {
@@ -34,7 +34,7 @@ response = requests.get(url, params=params)
 response.raise_for_status()
 data = response.json()
 
-# --- Transform ---
+# Step 2: Transform
 
 daily = data["daily"]
 
@@ -49,6 +49,7 @@ records = [
     for i in range(len(daily["time"]))
 ]
 
+print("---- Step 2: Transform ----")
 print(f"Prepared {len(records)} records")
 print("First record:", records[0])
 print("Last record:", records[-1])
@@ -65,9 +66,9 @@ print("Last record:", records[-1])
 # Missing Values
 
 records = [r for r in records if all(v is not None for v in r.values())]
-print(f"Records after dropping nulls: {len(records)}")
+print(f"\nRecords after dropping nulls: {len(records)}\n")
 
-# --- Load ---
+# Step 3: Load
 
 response = (
     supabase.table("weather_raw")
@@ -75,6 +76,7 @@ response = (
     .execute()
 )
 
+print("---- Step 3: Load ----")
 print(f"Upserted {len(response.data)} rows into weather_raw")
 
 # Question:
@@ -85,9 +87,10 @@ print(f"Upserted {len(response.data)} rows into weather_raw")
 # Because the date column acts as a unique conflict target, repeating the load updates existing 
 # rows in-place rather than duplicating them, ensuring safe and repeatable data pipelines.
 
-# Confirm the load
+# Step 4: Verify
 
 count_response = supabase.table("weather_raw").select("date", count="exact").execute()
+print("---- Step 4: Verify ----")
 print(f"Rows in weather_raw: {count_response.count}")
 
 
