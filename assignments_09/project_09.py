@@ -1,3 +1,6 @@
+# Link to video: https://youtu.be/Ec0tU7xKk6E
+
+
 import os
 from dotenv import load_dotenv
 from supabase import create_client
@@ -92,7 +95,6 @@ print(f"Upserted {len(response.data)} rows into weather_raw")
 count_response = supabase.table("weather_raw").select("date", count="exact").execute()
 print("---- Step 4: Verify ----")
 print(f"Rows in weather_raw: {count_response.count}")
-
 
 first = supabase.table("weather_raw").select("*").eq("date", "2023-01-01").execute()
 last  = supabase.table("weather_raw").select("*").eq("date", "2023-12-31").execute()
