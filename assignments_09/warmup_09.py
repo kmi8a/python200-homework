@@ -23,10 +23,15 @@ from supabase import create_client
 
 def get_client():
     load_dotenv()
-    SUPABASE_URL = os.environ["SUPABASE_URL"]
-    SUPABASE_KEY = os.environ["SUPABASE_KEY"]
-    supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
-    return supabase
+    SUPABASE_URL = os.getenv("SUPABASE_URL")
+    if SUPABASE_URL is None:
+        raise ValueError('Supabase URL not defined')
+
+    SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+    if SUPABASE_KEY is None:
+        raise ValueError('Supabase KEY not defined')
+
+    return create_client(SUPABASE_URL, SUPABASE_KEY)
 
 supabase = get_client()
 
@@ -46,9 +51,11 @@ supabase = get_client()
 
 # Answer:
 
-def insert_record(supabase):
+from datetime import date
+
+def insert_test_record(supabase):
     record = {
-        "date":               "2026-08-28",
+        "date":               str(date.today()),
         "temperature_2m_max": 28.4,
         "temperature_2m_min": 17.2,
         "precipitation_sum":  0.0,
@@ -57,7 +64,8 @@ def insert_record(supabase):
     supabase.table("weather_raw").insert(record).execute()
     return (f"Inserted.")
 
-insert_record(supabase)
+# this line has to be commented out after running the script the first time, so that the upsert function works.
+insert_test_record(supabase)
 
 # Q2
 # Write a function get_records_by_date_range(supabase, start, end) that returns all rows from weather_raw
@@ -69,7 +77,7 @@ def get_records_by_date_range(supabase, start, end):
     response = supabase.table("weather_raw").select("*").gte("date", start).lte("date", end).execute()
     return response.data
 
-filtered_records = get_records_by_date_range(supabase, "2026-08-01", "2026-08-31")
+filtered_records = get_records_by_date_range(supabase, "2026-08-01", str(date.today()))
 print(filtered_records)
 
 # Q3
@@ -94,13 +102,15 @@ def safe_upsert(supabase, records):
     print(f'Number of rows affected: {rows_affected}')
     return response.data
 
-to_update = {
-    "date":               "2026-08-28",
-    "temperature_2m_max": 32.4,
-    "temperature_2m_min": 15.2,
-    "precipitation_sum":  0.0,
-    "wind_speed_10m_max": 5.0,
-}
+to_update = [
+        {
+        "date":               str(date.today()),
+        "temperature_2m_max": 32.4,
+        "temperature_2m_min": 15.2,
+        "precipitation_sum":  0.0,
+        "wind_speed_10m_max": 5.0,
+    }
+]
 
 safe_upsert(supabase, to_update)
 
