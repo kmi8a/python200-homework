@@ -64,8 +64,10 @@ def insert_test_record(supabase):
     supabase.table("weather_raw").insert(record).execute()
     return (f"Inserted.")
 
-# this line has to be commented out after running the script the first time, so that the upsert function works.
 insert_test_record(supabase)
+
+# If the funtion is run twice, it will create an error because there is already a record with the same date on the database,
+# to sove this issue i would use the upsert function instead of insert, so the script is idempotent.
 
 # Q2
 # Write a function get_records_by_date_range(supabase, start, end) that returns all rows from weather_raw
@@ -77,7 +79,7 @@ def get_records_by_date_range(supabase, start, end):
     response = supabase.table("weather_raw").select("*").gte("date", start).lte("date", end).execute()
     return response.data
 
-filtered_records = get_records_by_date_range(supabase, "2026-08-01", str(date.today()))
+filtered_records = get_records_by_date_range(supabase, str(date.today()), str(date.today()))
 print(filtered_records)
 
 # Q3
@@ -98,7 +100,7 @@ print(filtered_records)
 
 def safe_upsert(supabase, records):
     response = supabase.table("weather_raw").upsert(records, on_conflict="date").execute()
-    rows_affected = len(response.data) if response.data else 0
+    rows_affected = len(response.data) if response.data else len(records)
     print(f'Number of rows affected: {rows_affected}')
     return response.data
 
