@@ -31,6 +31,7 @@ params = {
         "wind_speed_10m_max",
     ],
     "timezone": "America/New_York",
+    "temperature_unit": "fahrenheit",
 }
 
 response = requests.get(url, params=params)
