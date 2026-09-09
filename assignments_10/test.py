@@ -1,66 +1,98 @@
 import os
+import json
 import pandas as pd
+import joblib
 from dotenv import load_dotenv
 from supabase import create_client
-import joblib
-import json
-
-clf = joblib.load("models/weather_classifier.pkl")
-
-with open("models/weather_classifier_metadata.json") as f:
-    metadata = json.load(f)
-
-FEATURES = metadata["feature_names"]
-# ['temperature_2m_max', 'temperature_2m_min', 'precipitation_sum', 'wind_speed_10m_max']
+from openai import OpenAI
 
 load_dotenv()
 supabase = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_KEY"))
+openai_client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 
-response = supabase.table("weather_raw").select("*").execute()
-raw_rows = response.data
-print(f"Fetched {len(raw_rows)} rows from weather_raw")
+# Load model and feature list
+clf = joblib.load("models/weather_classifier.pkl")
+with open("models/weather_classifier_metadata.json") as f:
+    metadata = json.load(f)
+FEATURES = metadata["feature_names"]
 
-enriched_response = supabase.table("weather_enriched").select("date").execute()
-already_done = {row["date"] for row in enriched_response.data}
+SYSTEM_PROMPT = (
+    "You are writing a one-sentence running recommendation for a daily weather summary app. "
+    "You will receive weather conditions for a single day and a machine learning prediction "
+    "about whether the day is good for running. "
+    "Write exactly one sentence — direct, practical, and specific to the conditions. "
+    "Do not use bullet points, headers, or phrases like 'Based on the data'."
+)
 
-to_classify = [row for row in raw_rows if row["date"] not in already_done]
-print(f"Records to classify: {len(to_classify)} (skipping {len(already_done)} already enriched)")
+def make_user_message(row, good_for_running, confidence):
+    prediction_text = "good for running" if good_for_running else "not ideal for running"
+    return (
+        f"Date: {row['date']}\n"
+        f"High: {row['temperature_2m_max']}°F, Low: {row['temperature_2m_min']}°F\n"
+        f"Precipitation: {row['precipitation_sum']} mm\n"
+        f"Max wind speed: {row['wind_speed_10m_max']} km/h\n"
+        f"Model prediction: {prediction_text} (confidence: {confidence:.0%})"
+    )
 
+# --- Read ---
+raw_rows = supabase.table("weather_raw").select("*").execute().data
+already_done = {r["date"] for r in supabase.table("weather_enriched").select("date").execute().data}
+to_classify = [r for r in raw_rows if r["date"] not in already_done]
+print(f"Records to process: {len(to_classify)}")
+
+if not to_classify:
+    print("Nothing to do — all records already enriched.")
+    exit()
+
+# --- ML Transform ---
 df = pd.DataFrame(to_classify)
-X = df[FEATURES]  # select only the feature columns, in the right order
+X = df[FEATURES]
+predictions   = clf.predict(X)
+probabilities = clf.predict_proba(X)[:, 1]
 
-predictions  = clf.predict(X)          # array of 0s and 1s
-probabilities = clf.predict_proba(X)[:, 1]  # probability of class 1 (good for running)
-
-print(f"Good days predicted: {predictions.sum()} / {len(predictions)}")
-print(f"Confidence range: {probabilities.min():.2f} – {probabilities.max():.2f}")
-
-enrichment_records = []
-for i, row in enumerate(to_classify):
-    enrichment_records.append({
-        "date":             row["date"],
+enrichment_records = [
+    {
+        "date":             to_classify[i]["date"],
         "good_for_running": bool(predictions[i]),
         "confidence":       round(float(probabilities[i]), 4),
-        # llm_summary will be added in the next lesson
-    })
+        "llm_summary":      None,
+    }
+    for i in range(len(to_classify))
+]
 
-print("Sample enrichment records:")
-for r in enrichment_records[:3]:
-    print(r)
+# --- LLM Transform ---
+for i, record in enumerate(enrichment_records):
+    raw_row = to_classify[i]
+    try:
+        response = openai_client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": make_user_message(
+                    raw_row, record["good_for_running"], record["confidence"]
+                )},
+            ],
+            max_tokens=100,
+        )
+        summary = response.choices[0].message.content.strip()
+        record["llm_summary"] = summary or "Recommendation unavailable."
+    except Exception as e:
+        print(f"  API error on {record['date']}: {e}")
+        record["llm_summary"] = "Recommendation unavailable."
 
-good_days = [r for r in enrichment_records if r["good_for_running"]]
-skip_days = [r for r in enrichment_records if not r["good_for_running"]]
+    if (i + 1) % 50 == 0:
+        print(f"  Processed {i + 1} / {len(enrichment_records)}")
 
-print(f"Good days: {len(good_days)} ({len(good_days)/len(enrichment_records):.0%})")
-print(f"Skip days: {len(skip_days)}")
+# --- Load ---
+db_response = (
+    supabase.table("weather_enriched")
+    .upsert(enrichment_records, on_conflict="date")
+    .execute()
+)
+print(f"Upserted {len(db_response.data)} rows into weather_enriched")
 
-# Show a few high-confidence and borderline predictions
-enrichment_records.sort(key=lambda r: r["confidence"], reverse=True)
-print("\nHighest confidence (good for running):")
-for r in enrichment_records[:3]:
-    print(f"  {r['date']}: {r['confidence']:.3f}")
-
-enrichment_records.sort(key=lambda r: abs(r["confidence"] - 0.5))
-print("\nMost borderline (closest to 0.5 confidence):")
-for r in enrichment_records[:3]:
-    print(f"  {r['date']}: {r['confidence']:.3f}")
+# --- Spot-check ---
+sample = supabase.table("weather_enriched").select("*").limit(3).execute()
+for row in sample.data:
+    print(f"\n{row['date']} | good={row['good_for_running']} | conf={row['confidence']:.2f}")
+    print(f"  {row['llm_summary']}")
