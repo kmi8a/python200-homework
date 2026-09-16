@@ -112,7 +112,7 @@ def transform(raw_records: list) -> list:
         prediction_text = "good for running" if record["good_for_running"] else "not ideal for running"
         user_message = (
             f"Date: {raw_row['date']}\n"
-            f"High: {raw_row['temperature_2m_max']}°C, Low: {raw_row['temperature_2m_min']}°C\n"
+            f"High: {raw_row['temperature_2m_max']}°F, Low: {raw_row['temperature_2m_min']}°C\n"
             f"Precipitation: {raw_row['precipitation_sum']} mm\n"
             f"Max wind speed: {raw_row['wind_speed_10m_max']} km/h\n"
             f"Model prediction: {prediction_text} (confidence: {record['confidence']:.0%})"
@@ -157,7 +157,7 @@ def etl_pipeline():
     load_raw(raw_records)
     enrichment_records = transform(raw_records)
     load_enriched(enrichment_records)
-    print("Pipeline copmlete.")
+    print("Pipeline complete.")
 
 
 if __name__ == "__main__":
