@@ -17,7 +17,7 @@ from prefect.logging import get_run_logger
 # Q2
 # Write just the decorator line for a task named call_api that retries up to 3 times with a 30-second delay between attempts.
 
-@task(retries=2, retry_delay_seconds=10)
+@task(retries=3, retry_delay_seconds=30)
 
 # Q3
 # You run your pipeline and the Prefect UI shows: extract is Completed, load_raw is Completed, transform is Failed, load_enriched never ran. 
